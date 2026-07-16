@@ -1,0 +1,6811 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دفتر تصريف الأفعال الفرنسية — Amr</title>
+<style>
+  :root{
+    --paper:#FBF7EF;
+    --paper-line:#E4DCC9;
+    --ink:#1E2A38;
+    --ink-soft:#5B6472;
+    --blue:#2B5CAD;     /* présent */
+    --blue-bg:#EAF1FB;
+    --green:#3E7C59;    /* continu */
+    --green-bg:#EAF5EE;
+    --bordeaux:#A23B3B; /* passé */
+    --bordeaux-bg:#FBEDEA;
+    --plum:#6B4C8A;     /* futur */
+    --plum-bg:#F3EDF7;
+    --correct:#2F8F5B;
+    --wrong:#C0392B;
+    --gold:#B8862B;
+    --card-radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      repeating-linear-gradient(var(--paper), var(--paper) 30px, var(--paper-line) 31px, var(--paper) 32px),
+      var(--paper);
+    color:var(--ink);
+    font-family:"Segoe UI","Tahoma","Cairo",system-ui,sans-serif;
+    min-height:100vh;
+    padding:0 0 60px 0;
+  }
+  .fr{ font-family:"Georgia","Palatino Linotype",serif; direction:ltr; unicode-bidi:isolate; }
+  .topbar{
+    background:var(--ink);
+    color:#F4EFE4;
+    padding:18px 20px 22px;
+    border-bottom:6px solid var(--gold);
+    position:sticky; top:0; z-index:30;
+  }
+  .topbar h1{
+    margin:0 0 4px;
+    font-size:20px;
+    letter-spacing:.3px;
+  }
+  .credit-line{
+    text-align:center;
+    font-size:12px;
+    color:var(--gold);
+    background:rgba(184,134,43,.12);
+    border:1px solid rgba(184,134,43,.4);
+    border-radius:20px;
+    padding:4px 12px;
+    width:fit-content;
+    margin:0 auto 10px;
+  }
+  .topbar .fr-title{
+    font-family:"Georgia",serif;
+    color:#D8CBA6;
+    font-size:13px;
+    direction:ltr;
+  }
+  .tabs{
+    display:flex; gap:8px; margin-top:14px;
+  }
+  .tab-btn{
+    flex:1;
+    background:rgba(255,255,255,.08);
+    color:#F4EFE4;
+    border:1px solid rgba(255,255,255,.2);
+    border-radius:10px;
+    padding:10px 8px;
+    font-size:14px;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .tab-btn.active{
+    background:var(--gold);
+    color:#1E2A38;
+    border-color:var(--gold);
+  }
+  .wrap{ max-width:880px; margin:0 auto; padding:18px 16px; }
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  .card{
+    background:#fff;
+    border:1px solid var(--paper-line);
+    border-radius:var(--card-radius);
+    padding:16px;
+    margin-bottom:16px;
+    box-shadow:0 1px 3px rgba(30,42,56,.06);
+  }
+  .card h2{ margin-top:0; font-size:17px; }
+  .muted{ color:var(--ink-soft); font-size:13px; line-height:1.7; }
+
+  /* ---- picker (drill mode) ---- */
+  .picker-section{ margin-bottom:14px; }
+  .picker-section h3{
+    font-size:14px; margin:0 0 8px; color:var(--ink-soft);
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .picker-section h3 button{
+    font-size:12px; border:1px solid var(--paper-line); background:#fff;
+    border-radius:8px; padding:4px 10px; cursor:pointer; color:var(--blue);
+  }
+  .chip-grid{
+    display:flex; flex-wrap:wrap; gap:6px;
+  }
+  .chip{
+    border:1.5px solid var(--paper-line);
+    background:#fff;
+    border-radius:20px;
+    padding:6px 12px;
+    font-size:13px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .chip.verb-chip{ font-family:"Georgia",serif; direction:ltr; }
+  .chip.selected{ background:var(--blue); color:#fff; border-color:var(--blue); }
+  .chip.tense-chip.selected[data-t="présent"]{ background:var(--blue); border-color:var(--blue);}
+  .chip.tense-chip.selected[data-t="présent_continu"]{ background:var(--green); border-color:var(--green);}
+  .chip.tense-chip.selected[data-t="passé_composé"]{ background:var(--bordeaux); border-color:var(--bordeaux);}
+  .chip.tense-chip.selected[data-t="futur_simple"]{ background:var(--plum); border-color:var(--plum);}
+
+  .primary-btn{
+    background:var(--ink); color:#F4EFE4; border:none;
+    padding:12px 20px; border-radius:10px; font-size:15px; font-weight:700;
+    cursor:pointer; width:100%;
+  }
+  .primary-btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .secondary-btn{
+    background:#fff; color:var(--ink); border:1.5px solid var(--paper-line);
+    padding:10px 16px; border-radius:10px; font-size:14px; cursor:pointer;
+  }
+
+  /* ---- quiz question ---- */
+  .q-progress{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:13px; color:var(--ink-soft); margin-bottom:10px;
+  }
+  .tense-tag{
+    display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700;
+  }
+  .tense-tag.présent{ background:var(--blue-bg); color:var(--blue); }
+  .tense-tag.présent_continu{ background:var(--green-bg); color:var(--green); }
+  .tense-tag.passé_composé{ background:var(--bordeaux-bg); color:var(--bordeaux); }
+  .tense-tag.futur_simple{ background:var(--plum-bg); color:var(--plum); }
+
+  .q-sentence{
+    font-family:"Georgia",serif; direction:ltr; text-align:left;
+    font-size:19px; line-height:1.6; margin:14px 0 18px; color:var(--ink);
+  }
+  .q-sentence .blank{ border-bottom:2px dashed var(--gold); padding:0 4px; }
+
+  .options{ display:grid; gap:10px; }
+  .opt-btn{
+    font-family:"Georgia",serif; direction:ltr; text-align:left;
+    background:#fff; border:1.5px solid var(--paper-line); border-radius:10px;
+    padding:12px 14px; font-size:15px; cursor:pointer;
+  }
+  .opt-btn:hover{ border-color:var(--blue); }
+  .opt-btn.correct{ background:#EAF7EF; border-color:var(--correct); color:var(--correct); font-weight:700;}
+  .opt-btn.wrong{ background:#FBEAEA; border-color:var(--wrong); color:var(--wrong); font-weight:700;}
+  .opt-btn[disabled]{ cursor:default; }
+
+  .feedback-row{ margin-top:14px; display:flex; justify-content:flex-end; }
+
+  /* score stamp */
+  .stamp{
+    display:inline-block;
+    border:4px solid var(--bordeaux);
+    color:var(--bordeaux);
+    border-radius:12px;
+    padding:14px 26px;
+    transform:rotate(-4deg);
+    font-weight:800;
+    font-size:22px;
+    margin:14px 0;
+  }
+  .stamp.good{ border-color:var(--correct); color:var(--correct); }
+
+  .exam-grid{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px;
+  }
+  .exam-tile{
+    background:#fff; border:1.5px solid var(--paper-line); border-radius:12px;
+    padding:14px 10px; text-align:center; cursor:pointer;
+  }
+  .exam-tile .num{ font-size:22px; font-weight:800; color:var(--ink); }
+  .exam-tile .label{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+  .exam-tile.done{ border-color:var(--correct); background:var(--green-bg); }
+  .exam-tile .best{ font-size:11px; color:var(--correct); margin-top:4px; font-weight:700;}
+
+  .review-item{
+    border-bottom:1px solid var(--paper-line); padding:10px 0; font-size:14px;
+  }
+  .review-item .sent{ font-family:"Georgia",serif; direction:ltr; text-align:left; }
+  .review-item.wrong .sent{ color:var(--wrong); }
+  .review-item.correct .sent{ color:var(--correct); }
+
+  table.mini{
+    width:100%; border-collapse:collapse; font-size:13px; margin-top:8px;
+  }
+  table.mini th{ background:var(--ink); color:#fff; padding:5px; font-size:11px;}
+  table.mini td{ padding:5px; text-align:center; border-bottom:1px solid var(--paper-line); font-family:"Georgia",serif; direction:ltr; }
+
+  @media (max-width:480px){
+    .q-sentence{ font-size:17px; }
+    .topbar h1{ font-size:17px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="credit-line">إعداد: سميرة لكريم — Préparé par : Samira Lakrim</div>
+  <h1>📘 دفتر تصريف الأفعال الفرنسية</h1>
+  <div class="fr-title">Le Carnet de Conjugaison — 50 verbes essentiels</div>
+  <div class="tabs">
+    <button class="tab-btn active" data-view="drill">🧠 تدريب الحفظ</button>
+    <button class="tab-btn" data-view="exam">📝 الامتحانات الكاملة</button>
+    <button class="tab-btn" data-view="reference">📖 مرجع الأفعال</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ===================== DRILL VIEW ===================== -->
+  <div class="view active" id="view-drill">
+    <div class="card" id="drill-setup">
+      <h2>اختار إيه اللي عايز تتدرب عليه</h2>
+      <p class="muted">اختار فعل واحد أو أكتر (لحد الخمسين كلهم)، والأزمنة، والضمائر. هيطلعلك سؤال: يديك فعل + ضمير + زمن، وانت تختار الشكل الصحيح للتصريف.</p>
+
+      <div class="picker-section">
+        <h3>الأفعال <button id="btn-all-verbs">تحديد الكل / إلغاء الكل</button></h3>
+        <div class="chip-grid" id="verb-chips"></div>
+      </div>
+
+      <div class="picker-section">
+        <h3>الأزمنة</h3>
+        <div class="chip-grid" id="tense-chips"></div>
+      </div>
+
+      <div class="picker-section">
+        <h3>الضمائر</h3>
+        <div class="chip-grid" id="pronoun-chips"></div>
+      </div>
+
+      <button class="primary-btn" id="start-drill">ابدأ التدريب ▶</button>
+    </div>
+
+    <div class="card" id="drill-quiz" style="display:none;">
+      <div class="q-progress">
+        <span id="drill-progress"></span>
+        <span id="drill-score"></span>
+      </div>
+      <span class="tense-tag" id="drill-tense-tag"></span>
+      <div class="q-sentence" id="drill-question"></div>
+      <div class="options" id="drill-options"></div>
+      <div class="feedback-row">
+        <button class="secondary-btn" id="drill-next" style="display:none;">التالي ⟵</button>
+      </div>
+    </div>
+
+    <div class="card" id="drill-result" style="display:none;">
+      <h2>نتيجة التدريب</h2>
+      <div id="drill-stamp"></div>
+      <button class="primary-btn" id="drill-restart">تدريب تاني 🔁</button>
+    </div>
+  </div>
+
+  <!-- ===================== EXAM VIEW ===================== -->
+  <div class="view" id="view-exam">
+    <div class="card" id="exam-list">
+      <h2>اختار امتحان (٢٠ سؤال لكل امتحان)</h2>
+      <p class="muted">جمل حقيقية من حياة الشغل والحياة اليومية — اختيار من متعدد. عند كل امتحان هتلاقي مراجعة كاملة للإجابات الغلط في الآخر.</p>
+      <div class="exam-grid" id="exam-grid"></div>
+    </div>
+
+    <div class="card" id="exam-quiz" style="display:none;">
+      <div class="q-progress">
+        <span id="exam-progress"></span>
+        <span id="exam-score"></span>
+      </div>
+      <span class="tense-tag" id="exam-tense-tag"></span>
+      <div class="q-sentence" id="exam-question"></div>
+      <div class="options" id="exam-options"></div>
+      <div class="feedback-row">
+        <button class="secondary-btn" id="exam-next" style="display:none;">التالي ⟵</button>
+      </div>
+    </div>
+
+    <div class="card" id="exam-result" style="display:none;">
+      <h2>نتيجة الامتحان</h2>
+      <div id="exam-stamp"></div>
+      <h3 style="margin-top:20px;">مراجعة الإجابات</h3>
+      <div id="exam-review"></div>
+      <button class="primary-btn" id="exam-back" style="margin-top:14px;">رجوع لقائمة الامتحانات</button>
+    </div>
+  </div>
+
+  <!-- ===================== REFERENCE VIEW ===================== -->
+  <div class="view" id="view-reference">
+    <div class="card">
+      <h2>مرجع سريع للأفعال</h2>
+      <p class="muted">دوس على أي فعل عشان تشوف تصريفه كامل في الأزمنة الأربعة.</p>
+      <div class="chip-grid" id="ref-chips"></div>
+      <div id="ref-detail" style="margin-top:16px;"></div>
+    </div>
+  </div>
+
+</div>
+
+<script id="data-verbs" type="application/json">{
+  "pronouns": [
+    "je",
+    "tu",
+    "il/elle/on",
+    "nous",
+    "vous",
+    "ils/elles"
+  ],
+  "verbs": {
+    "Être": {
+      "présent": [
+        "suis",
+        "es",
+        "est",
+        "sommes",
+        "êtes",
+        "sont"
+      ],
+      "présent_continu": [
+        "suis en train d'être",
+        "es en train d'être",
+        "est en train d'être",
+        "sommes en train d'être",
+        "êtes en train d'être",
+        "sont en train d'être"
+      ],
+      "passé_composé": [
+        "ai été",
+        "as été",
+        "a été",
+        "avons été",
+        "avez été",
+        "ont été"
+      ],
+      "futur_simple": [
+        "serai",
+        "seras",
+        "sera",
+        "serons",
+        "serez",
+        "seront"
+      ],
+      "exemple_fr": "Je suis fatigué aujourd'hui.",
+      "exemple_ar": "أنا متعب اليوم.",
+      "note": "فعل حالة؛ نادراً ما يُستخدم مع 'en train de' لأنه ليس فعل حركة.",
+      "meaning_ar": "يكون"
+    },
+    "Avoir": {
+      "présent": [
+        "ai",
+        "as",
+        "a",
+        "avons",
+        "avez",
+        "ont"
+      ],
+      "présent_continu": [
+        "suis en train d'avoir",
+        "es en train d'avoir",
+        "est en train d'avoir",
+        "sommes en train d'avoir",
+        "êtes en train d'avoir",
+        "sont en train d'avoir"
+      ],
+      "passé_composé": [
+        "ai eu",
+        "as eu",
+        "a eu",
+        "avons eu",
+        "avez eu",
+        "ont eu"
+      ],
+      "futur_simple": [
+        "aurai",
+        "auras",
+        "aura",
+        "aurons",
+        "aurez",
+        "auront"
+      ],
+      "exemple_fr": "J'ai deux filles.",
+      "exemple_ar": "عندي بنتين.",
+      "note": "فعل حالة؛ 'en train d'avoir' نادر الاستخدام.",
+      "meaning_ar": "يملك / عنده"
+    },
+    "Aller": {
+      "présent": [
+        "vais",
+        "vas",
+        "va",
+        "allons",
+        "allez",
+        "vont"
+      ],
+      "présent_continu": [
+        "suis en train d'aller",
+        "es en train d'aller",
+        "est en train d'aller",
+        "sommes en train d'aller",
+        "êtes en train d'aller",
+        "sont en train d'aller"
+      ],
+      "passé_composé": [
+        "suis allé(e)",
+        "es allé(e)",
+        "est allé(e)",
+        "sommes allé(e)s",
+        "êtes allé(e)(s)",
+        "sont allé(e)s"
+      ],
+      "futur_simple": [
+        "irai",
+        "iras",
+        "ira",
+        "irons",
+        "irez",
+        "iront"
+      ],
+      "exemple_fr": "Je vais au bureau tous les jours.",
+      "exemple_ar": "أنا رايح المكتب كل يوم.",
+      "note": null,
+      "meaning_ar": "يذهب"
+    },
+    "Faire": {
+      "présent": [
+        "fais",
+        "fais",
+        "fait",
+        "faisons",
+        "faites",
+        "font"
+      ],
+      "présent_continu": [
+        "suis en train de faire",
+        "es en train de faire",
+        "est en train de faire",
+        "sommes en train de faire",
+        "êtes en train de faire",
+        "sont en train de faire"
+      ],
+      "passé_composé": [
+        "ai fait",
+        "as fait",
+        "a fait",
+        "avons fait",
+        "avez fait",
+        "ont fait"
+      ],
+      "futur_simple": [
+        "ferai",
+        "feras",
+        "fera",
+        "ferons",
+        "ferez",
+        "feront"
+      ],
+      "exemple_fr": "Je fais les courses le samedi.",
+      "exemple_ar": "بعمل التسوق يوم السبت.",
+      "note": null,
+      "meaning_ar": "يفعل / يعمل"
+    },
+    "Parler": {
+      "présent": [
+        "parle",
+        "parles",
+        "parle",
+        "parlons",
+        "parlez",
+        "parlent"
+      ],
+      "présent_continu": [
+        "suis en train de parler",
+        "es en train de parler",
+        "est en train de parler",
+        "sommes en train de parler",
+        "êtes en train de parler",
+        "sont en train de parler"
+      ],
+      "passé_composé": [
+        "ai parlé",
+        "as parlé",
+        "a parlé",
+        "avons parlé",
+        "avez parlé",
+        "ont parlé"
+      ],
+      "futur_simple": [
+        "parlerai",
+        "parleras",
+        "parlera",
+        "parlerons",
+        "parlerez",
+        "parleront"
+      ],
+      "exemple_fr": "Je parle français au travail.",
+      "exemple_ar": "بتكلم فرنساوي في الشغل.",
+      "note": null,
+      "meaning_ar": "يتكلم"
+    },
+    "Habiter": {
+      "présent": [
+        "habite",
+        "habites",
+        "habite",
+        "habitons",
+        "habitez",
+        "habitent"
+      ],
+      "présent_continu": [
+        "suis en train d'habiter",
+        "es en train d'habiter",
+        "est en train d'habiter",
+        "sommes en train d'habiter",
+        "êtes en train d'habiter",
+        "sont en train d'habiter"
+      ],
+      "passé_composé": [
+        "ai habité",
+        "as habité",
+        "a habité",
+        "avons habité",
+        "avez habité",
+        "ont habité"
+      ],
+      "futur_simple": [
+        "habiterai",
+        "habiteras",
+        "habitera",
+        "habiterons",
+        "habiterez",
+        "habiteront"
+      ],
+      "exemple_fr": "J'habite au Caire.",
+      "exemple_ar": "أنا ساكن في القاهرة.",
+      "note": null,
+      "meaning_ar": "يسكن"
+    },
+    "Étudier": {
+      "présent": [
+        "étudie",
+        "étudies",
+        "étudie",
+        "étudions",
+        "étudiez",
+        "étudient"
+      ],
+      "présent_continu": [
+        "suis en train d'étudier",
+        "es en train d'étudier",
+        "est en train d'étudier",
+        "sommes en train d'étudier",
+        "êtes en train d'étudier",
+        "sont en train d'étudier"
+      ],
+      "passé_composé": [
+        "ai étudié",
+        "as étudié",
+        "a étudié",
+        "avons étudié",
+        "avez étudié",
+        "ont étudié"
+      ],
+      "futur_simple": [
+        "étudierai",
+        "étudieras",
+        "étudiera",
+        "étudierons",
+        "étudierez",
+        "étudieront"
+      ],
+      "exemple_fr": "J'étudie le français chaque soir.",
+      "exemple_ar": "بذاكر فرنساوي كل ليلة.",
+      "note": null,
+      "meaning_ar": "يذاكر / يدرس"
+    },
+    "Travailler": {
+      "présent": [
+        "travaille",
+        "travailles",
+        "travaille",
+        "travaillons",
+        "travaillez",
+        "travaillent"
+      ],
+      "présent_continu": [
+        "suis en train de travailler",
+        "es en train de travailler",
+        "est en train de travailler",
+        "sommes en train de travailler",
+        "êtes en train de travailler",
+        "sont en train de travailler"
+      ],
+      "passé_composé": [
+        "ai travaillé",
+        "as travaillé",
+        "a travaillé",
+        "avons travaillé",
+        "avez travaillé",
+        "ont travaillé"
+      ],
+      "futur_simple": [
+        "travaillerai",
+        "travailleras",
+        "travaillera",
+        "travaillerons",
+        "travaillerez",
+        "travailleront"
+      ],
+      "exemple_fr": "Je travaille dans les achats.",
+      "exemple_ar": "بشتغل في المشتريات.",
+      "note": null,
+      "meaning_ar": "يشتغل"
+    },
+    "Vouloir": {
+      "présent": [
+        "veux",
+        "veux",
+        "veut",
+        "voulons",
+        "voulez",
+        "veulent"
+      ],
+      "présent_continu": [
+        "suis en train de vouloir",
+        "es en train de vouloir",
+        "est en train de vouloir",
+        "sommes en train de vouloir",
+        "êtes en train de vouloir",
+        "sont en train de vouloir"
+      ],
+      "passé_composé": [
+        "ai voulu",
+        "as voulu",
+        "a voulu",
+        "avons voulu",
+        "avez voulu",
+        "ont voulu"
+      ],
+      "futur_simple": [
+        "voudrai",
+        "voudras",
+        "voudra",
+        "voudrons",
+        "voudrez",
+        "voudront"
+      ],
+      "exemple_fr": "Je veux signer le contrat.",
+      "exemple_ar": "عايز أوقّع العقد.",
+      "note": "فعل حالة؛ 'en train de vouloir' نادر جداً.",
+      "meaning_ar": "يريد / عايز"
+    },
+    "Pouvoir": {
+      "présent": [
+        "peux",
+        "peux",
+        "peut",
+        "pouvons",
+        "pouvez",
+        "peuvent"
+      ],
+      "présent_continu": [
+        "suis en train de pouvoir",
+        "es en train de pouvoir",
+        "est en train de pouvoir",
+        "sommes en train de pouvoir",
+        "êtes en train de pouvoir",
+        "sont en train de pouvoir"
+      ],
+      "passé_composé": [
+        "ai pu",
+        "as pu",
+        "a pu",
+        "avons pu",
+        "avez pu",
+        "ont pu"
+      ],
+      "futur_simple": [
+        "pourrai",
+        "pourras",
+        "pourra",
+        "pourrons",
+        "pourrez",
+        "pourront"
+      ],
+      "exemple_fr": "Je peux vous rappeler demain.",
+      "exemple_ar": "أقدر أتصل بيك تاني بكرة.",
+      "note": "فعل حالة؛ لا يُستخدم عادة مع 'en train de'.",
+      "meaning_ar": "يقدر / يستطيع"
+    },
+    "Devoir": {
+      "présent": [
+        "dois",
+        "dois",
+        "doit",
+        "devons",
+        "devez",
+        "doivent"
+      ],
+      "présent_continu": [
+        "suis en train de devoir",
+        "es en train de devoir",
+        "est en train de devoir",
+        "sommes en train de devoir",
+        "êtes en train de devoir",
+        "sont en train de devoir"
+      ],
+      "passé_composé": [
+        "ai dû",
+        "as dû",
+        "a dû",
+        "avons dû",
+        "avez dû",
+        "ont dû"
+      ],
+      "futur_simple": [
+        "devrai",
+        "devras",
+        "devra",
+        "devrons",
+        "devrez",
+        "devront"
+      ],
+      "exemple_fr": "Je dois finir le rapport.",
+      "exemple_ar": "لازم أخلص التقرير.",
+      "note": "فعل حالة؛ لا يُستخدم عادة مع 'en train de'.",
+      "meaning_ar": "يجب / لازم"
+    },
+    "Venir": {
+      "présent": [
+        "viens",
+        "viens",
+        "vient",
+        "venons",
+        "venez",
+        "viennent"
+      ],
+      "présent_continu": [
+        "suis en train de venir",
+        "es en train de venir",
+        "est en train de venir",
+        "sommes en train de venir",
+        "êtes en train de venir",
+        "sont en train de venir"
+      ],
+      "passé_composé": [
+        "suis venu(e)",
+        "es venu(e)",
+        "est venu(e)",
+        "sommes venu(e)s",
+        "êtes venu(e)(s)",
+        "sont venu(e)s"
+      ],
+      "futur_simple": [
+        "viendrai",
+        "viendras",
+        "viendra",
+        "viendrons",
+        "viendrez",
+        "viendront"
+      ],
+      "exemple_fr": "Je viens de Suez.",
+      "exemple_ar": "أنا جاي من السويس.",
+      "note": null,
+      "meaning_ar": "يأتي / يجي"
+    },
+    "Prendre": {
+      "présent": [
+        "prends",
+        "prends",
+        "prend",
+        "prenons",
+        "prenez",
+        "prennent"
+      ],
+      "présent_continu": [
+        "suis en train de prendre",
+        "es en train de prendre",
+        "est en train de prendre",
+        "sommes en train de prendre",
+        "êtes en train de prendre",
+        "sont en train de prendre"
+      ],
+      "passé_composé": [
+        "ai pris",
+        "as pris",
+        "a pris",
+        "avons pris",
+        "avez pris",
+        "ont pris"
+      ],
+      "futur_simple": [
+        "prendrai",
+        "prendras",
+        "prendra",
+        "prendrons",
+        "prendrez",
+        "prendront"
+      ],
+      "exemple_fr": "Je prends le métro le matin.",
+      "exemple_ar": "باخد المترو الصبح.",
+      "note": null,
+      "meaning_ar": "يأخذ"
+    },
+    "Comprendre": {
+      "présent": [
+        "comprends",
+        "comprends",
+        "comprend",
+        "comprenons",
+        "comprenez",
+        "comprennent"
+      ],
+      "présent_continu": [
+        "suis en train de comprendre",
+        "es en train de comprendre",
+        "est en train de comprendre",
+        "sommes en train de comprendre",
+        "êtes en train de comprendre",
+        "sont en train de comprendre"
+      ],
+      "passé_composé": [
+        "ai compris",
+        "as compris",
+        "a compris",
+        "avons compris",
+        "avez compris",
+        "ont compris"
+      ],
+      "futur_simple": [
+        "comprendrai",
+        "comprendras",
+        "comprendra",
+        "comprendrons",
+        "comprendrez",
+        "comprendront"
+      ],
+      "exemple_fr": "Je comprends la question.",
+      "exemple_ar": "أنا فاهم السؤال.",
+      "note": null,
+      "meaning_ar": "يفهم"
+    },
+    "Voir": {
+      "présent": [
+        "vois",
+        "vois",
+        "voit",
+        "voyons",
+        "voyez",
+        "voient"
+      ],
+      "présent_continu": [
+        "suis en train de voir",
+        "es en train de voir",
+        "est en train de voir",
+        "sommes en train de voir",
+        "êtes en train de voir",
+        "sont en train de voir"
+      ],
+      "passé_composé": [
+        "ai vu",
+        "as vu",
+        "a vu",
+        "avons vu",
+        "avez vu",
+        "ont vu"
+      ],
+      "futur_simple": [
+        "verrai",
+        "verras",
+        "verra",
+        "verrons",
+        "verrez",
+        "verront"
+      ],
+      "exemple_fr": "Je vois le directeur demain.",
+      "exemple_ar": "هشوف المدير بكرة.",
+      "note": null,
+      "meaning_ar": "يرى / يشوف"
+    },
+    "Lire": {
+      "présent": [
+        "lis",
+        "lis",
+        "lit",
+        "lisons",
+        "lisez",
+        "lisent"
+      ],
+      "présent_continu": [
+        "suis en train de lire",
+        "es en train de lire",
+        "est en train de lire",
+        "sommes en train de lire",
+        "êtes en train de lire",
+        "sont en train de lire"
+      ],
+      "passé_composé": [
+        "ai lu",
+        "as lu",
+        "a lu",
+        "avons lu",
+        "avez lu",
+        "ont lu"
+      ],
+      "futur_simple": [
+        "lirai",
+        "liras",
+        "lira",
+        "lirons",
+        "lirez",
+        "liront"
+      ],
+      "exemple_fr": "Je lis le contrat attentivement.",
+      "exemple_ar": "بقرا العقد بتركيز.",
+      "note": null,
+      "meaning_ar": "يقرأ"
+    },
+    "Écrire": {
+      "présent": [
+        "écris",
+        "écris",
+        "écrit",
+        "écrivons",
+        "écrivez",
+        "écrivent"
+      ],
+      "présent_continu": [
+        "suis en train d'écrire",
+        "es en train d'écrire",
+        "est en train d'écrire",
+        "sommes en train d'écrire",
+        "êtes en train d'écrire",
+        "sont en train d'écrire"
+      ],
+      "passé_composé": [
+        "ai écrit",
+        "as écrit",
+        "a écrit",
+        "avons écrit",
+        "avez écrit",
+        "ont écrit"
+      ],
+      "futur_simple": [
+        "écrirai",
+        "écriras",
+        "écrira",
+        "écrirons",
+        "écrirez",
+        "écriront"
+      ],
+      "exemple_fr": "J'écris un e-mail au fournisseur.",
+      "exemple_ar": "بكتب إيميل للمورد.",
+      "note": null,
+      "meaning_ar": "يكتب"
+    },
+    "Dire": {
+      "présent": [
+        "dis",
+        "dis",
+        "dit",
+        "disons",
+        "dites",
+        "disent"
+      ],
+      "présent_continu": [
+        "suis en train de dire",
+        "es en train de dire",
+        "est en train de dire",
+        "sommes en train de dire",
+        "êtes en train de dire",
+        "sont en train de dire"
+      ],
+      "passé_composé": [
+        "ai dit",
+        "as dit",
+        "a dit",
+        "avons dit",
+        "avez dit",
+        "ont dit"
+      ],
+      "futur_simple": [
+        "dirai",
+        "diras",
+        "dira",
+        "dirons",
+        "direz",
+        "diront"
+      ],
+      "exemple_fr": "Je dis toujours la vérité.",
+      "exemple_ar": "بقول الحقيقة دايماً.",
+      "note": null,
+      "meaning_ar": "يقول"
+    },
+    "Mettre": {
+      "présent": [
+        "mets",
+        "mets",
+        "met",
+        "mettons",
+        "mettez",
+        "mettent"
+      ],
+      "présent_continu": [
+        "suis en train de mettre",
+        "es en train de mettre",
+        "est en train de mettre",
+        "sommes en train de mettre",
+        "êtes en train de mettre",
+        "sont en train de mettre"
+      ],
+      "passé_composé": [
+        "ai mis",
+        "as mis",
+        "a mis",
+        "avons mis",
+        "avez mis",
+        "ont mis"
+      ],
+      "futur_simple": [
+        "mettrai",
+        "mettras",
+        "mettra",
+        "mettrons",
+        "mettrez",
+        "mettront"
+      ],
+      "exemple_fr": "Je mets le dossier sur le bureau.",
+      "exemple_ar": "بحط الملف على المكتب.",
+      "note": null,
+      "meaning_ar": "يضع / يحط"
+    },
+    "Donner": {
+      "présent": [
+        "donne",
+        "donnes",
+        "donne",
+        "donnons",
+        "donnez",
+        "donnent"
+      ],
+      "présent_continu": [
+        "suis en train de donner",
+        "es en train de donner",
+        "est en train de donner",
+        "sommes en train de donner",
+        "êtes en train de donner",
+        "sont en train de donner"
+      ],
+      "passé_composé": [
+        "ai donné",
+        "as donné",
+        "a donné",
+        "avons donné",
+        "avez donné",
+        "ont donné"
+      ],
+      "futur_simple": [
+        "donnerai",
+        "donneras",
+        "donnera",
+        "donnerons",
+        "donnerez",
+        "donneront"
+      ],
+      "exemple_fr": "Je donne mon accord.",
+      "exemple_ar": "بديه موافقتي.",
+      "note": null,
+      "meaning_ar": "يعطي / يدي"
+    },
+    "Aimer": {
+      "présent": [
+        "aime",
+        "aimes",
+        "aime",
+        "aimons",
+        "aimez",
+        "aiment"
+      ],
+      "présent_continu": [
+        "suis en train d'aimer",
+        "es en train d'aimer",
+        "est en train d'aimer",
+        "sommes en train d'aimer",
+        "êtes en train d'aimer",
+        "sont en train d'aimer"
+      ],
+      "passé_composé": [
+        "ai aimé",
+        "as aimé",
+        "a aimé",
+        "avons aimé",
+        "avez aimé",
+        "ont aimé"
+      ],
+      "futur_simple": [
+        "aimerai",
+        "aimeras",
+        "aimera",
+        "aimerons",
+        "aimerez",
+        "aimeront"
+      ],
+      "exemple_fr": "J'aime négocier les contrats.",
+      "exemple_ar": "بحب أفاوض على العقود.",
+      "note": "فعل شعور؛ 'en train d'aimer' نادر الاستخدام.",
+      "meaning_ar": "يحب"
+    },
+    "Adorer": {
+      "présent": [
+        "adore",
+        "adores",
+        "adore",
+        "adorons",
+        "adorez",
+        "adorent"
+      ],
+      "présent_continu": [
+        "suis en train d'adorer",
+        "es en train d'adorer",
+        "est en train d'adorer",
+        "sommes en train d'adorer",
+        "êtes en train d'adorer",
+        "sont en train d'adorer"
+      ],
+      "passé_composé": [
+        "ai adoré",
+        "as adoré",
+        "a adoré",
+        "avons adoré",
+        "avez adoré",
+        "ont adoré"
+      ],
+      "futur_simple": [
+        "adorerai",
+        "adoreras",
+        "adorera",
+        "adorerons",
+        "adorerez",
+        "adoreront"
+      ],
+      "exemple_fr": "J'adore mon travail.",
+      "exemple_ar": "بموت في شغلي.",
+      "note": "فعل شعور؛ 'en train d'adorer' نادر الاستخدام.",
+      "meaning_ar": "يعشق / بيموت في"
+    },
+    "Détester": {
+      "présent": [
+        "déteste",
+        "détestes",
+        "déteste",
+        "détestons",
+        "détestez",
+        "détestent"
+      ],
+      "présent_continu": [
+        "suis en train de détester",
+        "es en train de détester",
+        "est en train de détester",
+        "sommes en train de détester",
+        "êtes en train de détester",
+        "sont en train de détester"
+      ],
+      "passé_composé": [
+        "ai détesté",
+        "as détesté",
+        "a détesté",
+        "avons détesté",
+        "avez détesté",
+        "ont détesté"
+      ],
+      "futur_simple": [
+        "détesterai",
+        "détesteras",
+        "détestera",
+        "détesterons",
+        "détesterez",
+        "détesteront"
+      ],
+      "exemple_fr": "Je déteste les retards.",
+      "exemple_ar": "بكره التأخير.",
+      "note": "فعل شعور؛ 'en train de détester' نادر الاستخدام.",
+      "meaning_ar": "يكره"
+    },
+    "Chercher": {
+      "présent": [
+        "cherche",
+        "cherches",
+        "cherche",
+        "cherchons",
+        "cherchez",
+        "cherchent"
+      ],
+      "présent_continu": [
+        "suis en train de chercher",
+        "es en train de chercher",
+        "est en train de chercher",
+        "sommes en train de chercher",
+        "êtes en train de chercher",
+        "sont en train de chercher"
+      ],
+      "passé_composé": [
+        "ai cherché",
+        "as cherché",
+        "a cherché",
+        "avons cherché",
+        "avez cherché",
+        "ont cherché"
+      ],
+      "futur_simple": [
+        "chercherai",
+        "chercheras",
+        "cherchera",
+        "chercherons",
+        "chercherez",
+        "chercheront"
+      ],
+      "exemple_fr": "Je cherche un fournisseur fiable.",
+      "exemple_ar": "بدور على مورد موثوق.",
+      "note": null,
+      "meaning_ar": "يبحث عن / يدور على"
+    },
+    "Trouver": {
+      "présent": [
+        "trouve",
+        "trouves",
+        "trouve",
+        "trouvons",
+        "trouvez",
+        "trouvent"
+      ],
+      "présent_continu": [
+        "suis en train de trouver",
+        "es en train de trouver",
+        "est en train de trouver",
+        "sommes en train de trouver",
+        "êtes en train de trouver",
+        "sont en train de trouver"
+      ],
+      "passé_composé": [
+        "ai trouvé",
+        "as trouvé",
+        "a trouvé",
+        "avons trouvé",
+        "avez trouvé",
+        "ont trouvé"
+      ],
+      "futur_simple": [
+        "trouverai",
+        "trouveras",
+        "trouvera",
+        "trouverons",
+        "trouverez",
+        "trouveront"
+      ],
+      "exemple_fr": "Je trouve une solution.",
+      "exemple_ar": "بلاقي حل.",
+      "note": null,
+      "meaning_ar": "يجد / يلاقي"
+    },
+    "Acheter": {
+      "présent": [
+        "achète",
+        "achètes",
+        "achète",
+        "achetons",
+        "achetez",
+        "achètent"
+      ],
+      "présent_continu": [
+        "suis en train d'acheter",
+        "es en train d'acheter",
+        "est en train d'acheter",
+        "sommes en train d'acheter",
+        "êtes en train d'acheter",
+        "sont en train d'acheter"
+      ],
+      "passé_composé": [
+        "ai acheté",
+        "as acheté",
+        "a acheté",
+        "avons acheté",
+        "avez acheté",
+        "ont acheté"
+      ],
+      "futur_simple": [
+        "achèterai",
+        "achèteras",
+        "achètera",
+        "achèterons",
+        "achèterez",
+        "achèteront"
+      ],
+      "exemple_fr": "J'achète du matériel de sécurité.",
+      "exemple_ar": "بشتري معدات أمان.",
+      "note": null,
+      "meaning_ar": "يشتري"
+    },
+    "Manger": {
+      "présent": [
+        "mange",
+        "manges",
+        "mange",
+        "mangeons",
+        "mangez",
+        "mangent"
+      ],
+      "présent_continu": [
+        "suis en train de manger",
+        "es en train de manger",
+        "est en train de manger",
+        "sommes en train de manger",
+        "êtes en train de manger",
+        "sont en train de manger"
+      ],
+      "passé_composé": [
+        "ai mangé",
+        "as mangé",
+        "a mangé",
+        "avons mangé",
+        "avez mangé",
+        "ont mangé"
+      ],
+      "futur_simple": [
+        "mangerai",
+        "mangeras",
+        "mangera",
+        "mangerons",
+        "mangerez",
+        "mangeront"
+      ],
+      "exemple_fr": "Je mange au bureau à midi.",
+      "exemple_ar": "باكل في المكتب الضهر.",
+      "note": null,
+      "meaning_ar": "يأكل"
+    },
+    "Boire": {
+      "présent": [
+        "bois",
+        "bois",
+        "boit",
+        "buvons",
+        "buvez",
+        "boivent"
+      ],
+      "présent_continu": [
+        "suis en train de boire",
+        "es en train de boire",
+        "est en train de boire",
+        "sommes en train de boire",
+        "êtes en train de boire",
+        "sont en train de boire"
+      ],
+      "passé_composé": [
+        "ai bu",
+        "as bu",
+        "a bu",
+        "avons bu",
+        "avez bu",
+        "ont bu"
+      ],
+      "futur_simple": [
+        "boirai",
+        "boiras",
+        "boira",
+        "boirons",
+        "boirez",
+        "boiront"
+      ],
+      "exemple_fr": "Je bois un café le matin.",
+      "exemple_ar": "باشرب قهوة الصبح.",
+      "note": null,
+      "meaning_ar": "يشرب"
+    },
+    "Dormir": {
+      "présent": [
+        "dors",
+        "dors",
+        "dort",
+        "dormons",
+        "dormez",
+        "dorment"
+      ],
+      "présent_continu": [
+        "suis en train de dormir",
+        "es en train de dormir",
+        "est en train de dormir",
+        "sommes en train de dormir",
+        "êtes en train de dormir",
+        "sont en train de dormir"
+      ],
+      "passé_composé": [
+        "ai dormi",
+        "as dormi",
+        "a dormi",
+        "avons dormi",
+        "avez dormi",
+        "ont dormi"
+      ],
+      "futur_simple": [
+        "dormirai",
+        "dormiras",
+        "dormira",
+        "dormirons",
+        "dormirez",
+        "dormiront"
+      ],
+      "exemple_fr": "Je dors sept heures par nuit.",
+      "exemple_ar": "بنام سبع ساعات في الليلة.",
+      "note": null,
+      "meaning_ar": "ينام"
+    },
+    "Sortir": {
+      "présent": [
+        "sors",
+        "sors",
+        "sort",
+        "sortons",
+        "sortez",
+        "sortent"
+      ],
+      "présent_continu": [
+        "suis en train de sortir",
+        "es en train de sortir",
+        "est en train de sortir",
+        "sommes en train de sortir",
+        "êtes en train de sortir",
+        "sont en train de sortir"
+      ],
+      "passé_composé": [
+        "suis sorti(e)",
+        "es sorti(e)",
+        "est sorti(e)",
+        "sommes sorti(e)s",
+        "êtes sorti(e)(s)",
+        "sont sorti(e)s"
+      ],
+      "futur_simple": [
+        "sortirai",
+        "sortiras",
+        "sortira",
+        "sortirons",
+        "sortirez",
+        "sortiront"
+      ],
+      "exemple_fr": "Je sors du bureau à 17h.",
+      "exemple_ar": "بخرج من المكتب الساعة 5.",
+      "note": null,
+      "meaning_ar": "يخرج"
+    },
+    "Entrer": {
+      "présent": [
+        "entre",
+        "entres",
+        "entre",
+        "entrons",
+        "entrez",
+        "entrent"
+      ],
+      "présent_continu": [
+        "suis en train d'entrer",
+        "es en train d'entrer",
+        "est en train d'entrer",
+        "sommes en train d'entrer",
+        "êtes en train d'entrer",
+        "sont en train d'entrer"
+      ],
+      "passé_composé": [
+        "suis entré(e)",
+        "es entré(e)",
+        "est entré(e)",
+        "sommes entré(e)s",
+        "êtes entré(e)(s)",
+        "sont entré(e)s"
+      ],
+      "futur_simple": [
+        "entrerai",
+        "entreras",
+        "entrera",
+        "entrerons",
+        "entrerez",
+        "entreront"
+      ],
+      "exemple_fr": "J'entre dans la réunion.",
+      "exemple_ar": "بدخل الاجتماع.",
+      "note": null,
+      "meaning_ar": "يدخل"
+    },
+    "Arriver": {
+      "présent": [
+        "arrive",
+        "arrives",
+        "arrive",
+        "arrivons",
+        "arrivez",
+        "arrivent"
+      ],
+      "présent_continu": [
+        "suis en train d'arriver",
+        "es en train d'arriver",
+        "est en train d'arriver",
+        "sommes en train d'arriver",
+        "êtes en train d'arriver",
+        "sont en train d'arriver"
+      ],
+      "passé_composé": [
+        "suis arrivé(e)",
+        "es arrivé(e)",
+        "est arrivé(e)",
+        "sommes arrivé(e)s",
+        "êtes arrivé(e)(s)",
+        "sont arrivé(e)s"
+      ],
+      "futur_simple": [
+        "arriverai",
+        "arriveras",
+        "arrivera",
+        "arriverons",
+        "arriverez",
+        "arriveront"
+      ],
+      "exemple_fr": "J'arrive au travail à 8h.",
+      "exemple_ar": "بوصل الشغل الساعة 8.",
+      "note": null,
+      "meaning_ar": "يصل"
+    },
+    "Partir": {
+      "présent": [
+        "pars",
+        "pars",
+        "part",
+        "partons",
+        "partez",
+        "partent"
+      ],
+      "présent_continu": [
+        "suis en train de partir",
+        "es en train de partir",
+        "est en train de partir",
+        "sommes en train de partir",
+        "êtes en train de partir",
+        "sont en train de partir"
+      ],
+      "passé_composé": [
+        "suis parti(e)",
+        "es parti(e)",
+        "est parti(e)",
+        "sommes parti(e)s",
+        "êtes parti(e)(s)",
+        "sont parti(e)s"
+      ],
+      "futur_simple": [
+        "partirai",
+        "partiras",
+        "partira",
+        "partirons",
+        "partirez",
+        "partiront"
+      ],
+      "exemple_fr": "Je pars en réunion.",
+      "exemple_ar": "أنا رايح اجتماع.",
+      "note": null,
+      "meaning_ar": "يغادر / يمشي"
+    },
+    "Commencer": {
+      "présent": [
+        "commence",
+        "commences",
+        "commence",
+        "commençons",
+        "commencez",
+        "commencent"
+      ],
+      "présent_continu": [
+        "suis en train de commencer",
+        "es en train de commencer",
+        "est en train de commencer",
+        "sommes en train de commencer",
+        "êtes en train de commencer",
+        "sont en train de commencer"
+      ],
+      "passé_composé": [
+        "ai commencé",
+        "as commencé",
+        "a commencé",
+        "avons commencé",
+        "avez commencé",
+        "ont commencé"
+      ],
+      "futur_simple": [
+        "commencerai",
+        "commenceras",
+        "commencera",
+        "commencerons",
+        "commencerez",
+        "commenceront"
+      ],
+      "exemple_fr": "Je commence la négociation.",
+      "exemple_ar": "بابدأ المفاوضة.",
+      "note": null,
+      "meaning_ar": "يبدأ"
+    },
+    "Finir": {
+      "présent": [
+        "finis",
+        "finis",
+        "finit",
+        "finissons",
+        "finissez",
+        "finissent"
+      ],
+      "présent_continu": [
+        "suis en train de finir",
+        "es en train de finir",
+        "est en train de finir",
+        "sommes en train de finir",
+        "êtes en train de finir",
+        "sont en train de finir"
+      ],
+      "passé_composé": [
+        "ai fini",
+        "as fini",
+        "a fini",
+        "avons fini",
+        "avez fini",
+        "ont fini"
+      ],
+      "futur_simple": [
+        "finirai",
+        "finiras",
+        "finira",
+        "finirons",
+        "finirez",
+        "finiront"
+      ],
+      "exemple_fr": "Je finis le rapport aujourd'hui.",
+      "exemple_ar": "هخلص التقرير النهاردة.",
+      "note": null,
+      "meaning_ar": "ينهي / يخلص"
+    },
+    "Ouvrir": {
+      "présent": [
+        "ouvre",
+        "ouvres",
+        "ouvre",
+        "ouvrons",
+        "ouvrez",
+        "ouvrent"
+      ],
+      "présent_continu": [
+        "suis en train d'ouvrir",
+        "es en train d'ouvrir",
+        "est en train d'ouvrir",
+        "sommes en train d'ouvrir",
+        "êtes en train d'ouvrir",
+        "sont en train d'ouvrir"
+      ],
+      "passé_composé": [
+        "ai ouvert",
+        "as ouvert",
+        "a ouvert",
+        "avons ouvert",
+        "avez ouvert",
+        "ont ouvert"
+      ],
+      "futur_simple": [
+        "ouvrirai",
+        "ouvriras",
+        "ouvrira",
+        "ouvrirons",
+        "ouvrirez",
+        "ouvriront"
+      ],
+      "exemple_fr": "J'ouvre l'appel d'offres.",
+      "exemple_ar": "بفتح المناقصة.",
+      "note": null,
+      "meaning_ar": "يفتح"
+    },
+    "Fermer": {
+      "présent": [
+        "ferme",
+        "fermes",
+        "ferme",
+        "fermons",
+        "fermez",
+        "ferment"
+      ],
+      "présent_continu": [
+        "suis en train de fermer",
+        "es en train de fermer",
+        "est en train de fermer",
+        "sommes en train de fermer",
+        "êtes en train de fermer",
+        "sont en train de fermer"
+      ],
+      "passé_composé": [
+        "ai fermé",
+        "as fermé",
+        "a fermé",
+        "avons fermé",
+        "avez fermé",
+        "ont fermé"
+      ],
+      "futur_simple": [
+        "fermerai",
+        "fermeras",
+        "fermera",
+        "fermerons",
+        "fermerez",
+        "fermeront"
+      ],
+      "exemple_fr": "Je ferme le dossier.",
+      "exemple_ar": "بقفل الملف.",
+      "note": null,
+      "meaning_ar": "يقفل / يغلق"
+    },
+    "Répondre": {
+      "présent": [
+        "réponds",
+        "réponds",
+        "répond",
+        "répondons",
+        "répondez",
+        "répondent"
+      ],
+      "présent_continu": [
+        "suis en train de répondre",
+        "es en train de répondre",
+        "est en train de répondre",
+        "sommes en train de répondre",
+        "êtes en train de répondre",
+        "sont en train de répondre"
+      ],
+      "passé_composé": [
+        "ai répondu",
+        "as répondu",
+        "a répondu",
+        "avons répondu",
+        "avez répondu",
+        "ont répondu"
+      ],
+      "futur_simple": [
+        "répondrai",
+        "répondras",
+        "répondra",
+        "répondrons",
+        "répondrez",
+        "répondront"
+      ],
+      "exemple_fr": "Je réponds au fournisseur.",
+      "exemple_ar": "برد على المورد.",
+      "note": null,
+      "meaning_ar": "يرد"
+    },
+    "Demander": {
+      "présent": [
+        "demande",
+        "demandes",
+        "demande",
+        "demandons",
+        "demandez",
+        "demandent"
+      ],
+      "présent_continu": [
+        "suis en train de demander",
+        "es en train de demander",
+        "est en train de demander",
+        "sommes en train de demander",
+        "êtes en train de demander",
+        "sont en train de demander"
+      ],
+      "passé_composé": [
+        "ai demandé",
+        "as demandé",
+        "a demandé",
+        "avons demandé",
+        "avez demandé",
+        "ont demandé"
+      ],
+      "futur_simple": [
+        "demanderai",
+        "demanderas",
+        "demandera",
+        "demanderons",
+        "demanderez",
+        "demanderont"
+      ],
+      "exemple_fr": "Je demande une réduction de prix.",
+      "exemple_ar": "بطلب تخفيض في السعر.",
+      "note": null,
+      "meaning_ar": "يطلب / يسأل"
+    },
+    "Écouter": {
+      "présent": [
+        "écoute",
+        "écoutes",
+        "écoute",
+        "écoutons",
+        "écoutez",
+        "écoutent"
+      ],
+      "présent_continu": [
+        "suis en train d'écouter",
+        "es en train d'écouter",
+        "est en train d'écouter",
+        "sommes en train d'écouter",
+        "êtes en train d'écouter",
+        "sont en train d'écouter"
+      ],
+      "passé_composé": [
+        "ai écouté",
+        "as écouté",
+        "a écouté",
+        "avons écouté",
+        "avez écouté",
+        "ont écouté"
+      ],
+      "futur_simple": [
+        "écouterai",
+        "écouteras",
+        "écoutera",
+        "écouterons",
+        "écouterez",
+        "écouteront"
+      ],
+      "exemple_fr": "J'écoute les propositions du client.",
+      "exemple_ar": "بسمع مقترحات العميل.",
+      "note": null,
+      "meaning_ar": "يستمع / يسمع"
+    },
+    "Regarder": {
+      "présent": [
+        "regarde",
+        "regardes",
+        "regarde",
+        "regardons",
+        "regardez",
+        "regardent"
+      ],
+      "présent_continu": [
+        "suis en train de regarder",
+        "es en train de regarder",
+        "est en train de regarder",
+        "sommes en train de regarder",
+        "êtes en train de regarder",
+        "sont en train de regarder"
+      ],
+      "passé_composé": [
+        "ai regardé",
+        "as regardé",
+        "a regardé",
+        "avons regardé",
+        "avez regardé",
+        "ont regardé"
+      ],
+      "futur_simple": [
+        "regarderai",
+        "regarderas",
+        "regardera",
+        "regarderons",
+        "regarderez",
+        "regarderont"
+      ],
+      "exemple_fr": "Je regarde le contrat en détail.",
+      "exemple_ar": "باتفرج على العقد بالتفصيل.",
+      "note": null,
+      "meaning_ar": "ينظر / يتفرج على"
+    },
+    "Jouer": {
+      "présent": [
+        "joue",
+        "joues",
+        "joue",
+        "jouons",
+        "jouez",
+        "jouent"
+      ],
+      "présent_continu": [
+        "suis en train de jouer",
+        "es en train de jouer",
+        "est en train de jouer",
+        "sommes en train de jouer",
+        "êtes en train de jouer",
+        "sont en train de jouer"
+      ],
+      "passé_composé": [
+        "ai joué",
+        "as joué",
+        "a joué",
+        "avons joué",
+        "avez joué",
+        "ont joué"
+      ],
+      "futur_simple": [
+        "jouerai",
+        "joueras",
+        "jouera",
+        "jouerons",
+        "jouerez",
+        "joueront"
+      ],
+      "exemple_fr": "Je joue au football le vendredi.",
+      "exemple_ar": "بلعب كورة يوم الجمعة.",
+      "note": null,
+      "meaning_ar": "يلعب"
+    },
+    "Chanter": {
+      "présent": [
+        "chante",
+        "chantes",
+        "chante",
+        "chantons",
+        "chantez",
+        "chantent"
+      ],
+      "présent_continu": [
+        "suis en train de chanter",
+        "es en train de chanter",
+        "est en train de chanter",
+        "sommes en train de chanter",
+        "êtes en train de chanter",
+        "sont en train de chanter"
+      ],
+      "passé_composé": [
+        "ai chanté",
+        "as chanté",
+        "a chanté",
+        "avons chanté",
+        "avez chanté",
+        "ont chanté"
+      ],
+      "futur_simple": [
+        "chanterai",
+        "chanteras",
+        "chantera",
+        "chanterons",
+        "chanterez",
+        "chanteront"
+      ],
+      "exemple_fr": "Je chante sous la douche.",
+      "exemple_ar": "بغني وأنا بستحمى.",
+      "note": null,
+      "meaning_ar": "يغني"
+    },
+    "Danser": {
+      "présent": [
+        "danse",
+        "danses",
+        "danse",
+        "dansons",
+        "dansez",
+        "dansent"
+      ],
+      "présent_continu": [
+        "suis en train de danser",
+        "es en train de danser",
+        "est en train de danser",
+        "sommes en train de danser",
+        "êtes en train de danser",
+        "sont en train de danser"
+      ],
+      "passé_composé": [
+        "ai dansé",
+        "as dansé",
+        "a dansé",
+        "avons dansé",
+        "avez dansé",
+        "ont dansé"
+      ],
+      "futur_simple": [
+        "danserai",
+        "danseras",
+        "dansera",
+        "danserons",
+        "danserez",
+        "danseront"
+      ],
+      "exemple_fr": "Je danse à la fête.",
+      "exemple_ar": "برقص في الحفلة.",
+      "note": null,
+      "meaning_ar": "يرقص"
+    },
+    "Nager": {
+      "présent": [
+        "nage",
+        "nages",
+        "nage",
+        "nageons",
+        "nagez",
+        "nagent"
+      ],
+      "présent_continu": [
+        "suis en train de nager",
+        "es en train de nager",
+        "est en train de nager",
+        "sommes en train de nager",
+        "êtes en train de nager",
+        "sont en train de nager"
+      ],
+      "passé_composé": [
+        "ai nagé",
+        "as nagé",
+        "a nagé",
+        "avons nagé",
+        "avez nagé",
+        "ont nagé"
+      ],
+      "futur_simple": [
+        "nagerai",
+        "nageras",
+        "nagera",
+        "nagerons",
+        "nagerez",
+        "nageront"
+      ],
+      "exemple_fr": "Je nage le week-end.",
+      "exemple_ar": "بعوم في الويكند.",
+      "note": null,
+      "meaning_ar": "يعوم / يسبح"
+    },
+    "Courir": {
+      "présent": [
+        "cours",
+        "cours",
+        "court",
+        "courons",
+        "courez",
+        "courent"
+      ],
+      "présent_continu": [
+        "suis en train de courir",
+        "es en train de courir",
+        "est en train de courir",
+        "sommes en train de courir",
+        "êtes en train de courir",
+        "sont en train de courir"
+      ],
+      "passé_composé": [
+        "ai couru",
+        "as couru",
+        "a couru",
+        "avons couru",
+        "avez couru",
+        "ont couru"
+      ],
+      "futur_simple": [
+        "courrai",
+        "courras",
+        "courra",
+        "courrons",
+        "courrez",
+        "courront"
+      ],
+      "exemple_fr": "Je cours le matin.",
+      "exemple_ar": "بجري الصبح.",
+      "note": null,
+      "meaning_ar": "يجري"
+    },
+    "Appeler": {
+      "présent": [
+        "appelle",
+        "appelles",
+        "appelle",
+        "appelons",
+        "appelez",
+        "appellent"
+      ],
+      "présent_continu": [
+        "suis en train d'appeler",
+        "es en train d'appeler",
+        "est en train d'appeler",
+        "sommes en train d'appeler",
+        "êtes en train d'appeler",
+        "sont en train d'appeler"
+      ],
+      "passé_composé": [
+        "ai appelé",
+        "as appelé",
+        "a appelé",
+        "avons appelé",
+        "avez appelé",
+        "ont appelé"
+      ],
+      "futur_simple": [
+        "appellerai",
+        "appelleras",
+        "appellera",
+        "appellerons",
+        "appellerez",
+        "appelleront"
+      ],
+      "exemple_fr": "J'appelle le fournisseur.",
+      "exemple_ar": "باتصل بالمورد.",
+      "note": null,
+      "meaning_ar": "يتصل / ينادي"
+    },
+    "S'appeler": {
+      "présent": [
+        "je m'appelle",
+        "tu t'appelles",
+        "il/elle s'appelle",
+        "nous nous appelons",
+        "vous vous appelez",
+        "ils/elles s'appellent"
+      ],
+      "présent_continu": [
+        "je suis en train de m'appeler (نادر الاستخدام)",
+        "tu es en train de t'appeler (نادر)",
+        "il/elle est en train de s'appeler (نادر)",
+        "nous sommes en train de nous appeler (نادر)",
+        "vous êtes en train de vous appeler (نادر)",
+        "ils/elles sont en train de s'appeler (نادر)"
+      ],
+      "passé_composé": [
+        "je me suis appelé(e)",
+        "tu t'es appelé(e)",
+        "il/elle s'est appelé(e)",
+        "nous nous sommes appelé(e)s",
+        "vous vous êtes appelé(e)(s)",
+        "ils/elles se sont appelé(e)s"
+      ],
+      "futur_simple": [
+        "je m'appellerai",
+        "tu t'appelleras",
+        "il/elle s'appellera",
+        "nous nous appellerons",
+        "vous vous appellerez",
+        "ils/elles s'appelleront"
+      ],
+      "exemple_fr": "Je m'appelle Amr.",
+      "exemple_ar": "اسمي عمرو.",
+      "note": "فعل انعكاسي (pronominal)؛ الضمير المنعكس (me/te/se) يتغير مع كل شخص.",
+      "meaning_ar": "اسمه (يُدعى)"
+    },
+    "Connaître": {
+      "présent": [
+        "connais",
+        "connais",
+        "connaît",
+        "connaissons",
+        "connaissez",
+        "connaissent"
+      ],
+      "présent_continu": [
+        "suis en train de connaître",
+        "es en train de connaître",
+        "est en train de connaître",
+        "sommes en train de connaître",
+        "êtes en train de connaître",
+        "sont en train de connaître"
+      ],
+      "passé_composé": [
+        "ai connu",
+        "as connu",
+        "a connu",
+        "avons connu",
+        "avez connu",
+        "ont connu"
+      ],
+      "futur_simple": [
+        "connaîtrai",
+        "connaîtras",
+        "connaîtra",
+        "connaîtrons",
+        "connaîtrez",
+        "connaîtront"
+      ],
+      "exemple_fr": "Je connais bien ce fournisseur.",
+      "exemple_ar": "أنا عارف المورد ده كويس.",
+      "note": "فعل معرفة؛ 'en train de connaître' نادر الاستخدام.",
+      "meaning_ar": "يعرف (شخص/مكان)"
+    },
+    "Savoir": {
+      "présent": [
+        "sais",
+        "sais",
+        "sait",
+        "savons",
+        "savez",
+        "savent"
+      ],
+      "présent_continu": [
+        "suis en train de savoir",
+        "es en train de savoir",
+        "est en train de savoir",
+        "sommes en train de savoir",
+        "êtes en train de savoir",
+        "sont en train de savoir"
+      ],
+      "passé_composé": [
+        "ai su",
+        "as su",
+        "a su",
+        "avons su",
+        "avez su",
+        "ont su"
+      ],
+      "futur_simple": [
+        "saurai",
+        "sauras",
+        "saura",
+        "saurons",
+        "saurez",
+        "sauront"
+      ],
+      "exemple_fr": "Je sais négocier un contrat.",
+      "exemple_ar": "أعرف أفاوض على عقد.",
+      "note": "فعل معرفة؛ 'en train de savoir' نادر الاستخدام.",
+      "meaning_ar": "يعرف (معلومة/مهارة)"
+    }
+  }
+}</script>
+<script id="data-exams" type="application/json">{
+ "exams": [
+  [
+   {
+    "id": 1,
+    "verb": "Donner",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Tu ___ mon accord.",
+    "answer": "es en train de donner",
+    "options": [
+     "es en train de donner",
+     "êtes en train de donner",
+     "sont en train de donner",
+     "sommes en train de donner"
+    ]
+   },
+   {
+    "id": 2,
+    "verb": "Finir",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Il ___ le rapport aujourd'hui.",
+    "answer": "a fini",
+    "options": [
+     "avons fini",
+     "ont fini",
+     "a fini",
+     "as fini"
+    ]
+   },
+   {
+    "id": 3,
+    "verb": "Répondre",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Nous ___ au fournisseur.",
+    "answer": "sommes en train de répondre",
+    "options": [
+     "es en train de répondre",
+     "sont en train de répondre",
+     "sommes en train de répondre",
+     "est en train de répondre"
+    ]
+   },
+   {
+    "id": 4,
+    "verb": "Entrer",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Vous ___ dans la réunion.",
+    "answer": "êtes en train d'entrer",
+    "options": [
+     "sont en train d'entrer",
+     "est en train d'entrer",
+     "es en train d'entrer",
+     "êtes en train d'entrer"
+    ]
+   },
+   {
+    "id": 5,
+    "verb": "S'appeler",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Avant, ___ différemment (changement de nom).",
+    "answer": "je me suis appelé(e)",
+    "options": [
+     "je me suis appelé(e)",
+     "vous vous êtes appelé(e)(s)",
+     "il/elle s'est appelé(e)",
+     "tu t'es appelé(e)"
+    ]
+   },
+   {
+    "id": 6,
+    "verb": "Lire",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Il ___ le contrat attentivement.",
+    "answer": "lit",
+    "options": [
+     "lis",
+     "lisez",
+     "lisent",
+     "lit"
+    ]
+   },
+   {
+    "id": 7,
+    "verb": "Connaître",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Nous ___ bien ce fournisseur.",
+    "answer": "avons connu",
+    "options": [
+     "as connu",
+     "avons connu",
+     "ai connu",
+     "avez connu"
+    ]
+   },
+   {
+    "id": 8,
+    "verb": "Aimer",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Il ___ négocier les contrats.",
+    "answer": "aime",
+    "options": [
+     "aimes",
+     "aime",
+     "aime",
+     "aimons"
+    ]
+   },
+   {
+    "id": 9,
+    "verb": "Appeler",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Tu ___ le fournisseur.",
+    "answer": "es en train d'appeler",
+    "options": [
+     "êtes en train d'appeler",
+     "sont en train d'appeler",
+     "es en train d'appeler",
+     "suis en train d'appeler"
+    ]
+   },
+   {
+    "id": 10,
+    "verb": "Donner",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Ils ___ mon accord.",
+    "answer": "donneront",
+    "options": [
+     "donneras",
+     "donneront",
+     "donnerez",
+     "donnerai"
+    ]
+   },
+   {
+    "id": 11,
+    "verb": "Trouver",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Je ___ une solution.",
+    "answer": "trouverai",
+    "options": [
+     "trouverez",
+     "trouveront",
+     "trouverai",
+     "trouveras"
+    ]
+   },
+   {
+    "id": 12,
+    "verb": "Voir",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Vous ___ le directeur demain.",
+    "answer": "avez vu",
+    "options": [
+     "ont vu",
+     "avons vu",
+     "avez vu",
+     "ai vu"
+    ]
+   },
+   {
+    "id": 13,
+    "verb": "Jouer",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Ils ___ au football le vendredi.",
+    "answer": "ont joué",
+    "options": [
+     "avez joué",
+     "avons joué",
+     "ont joué",
+     "as joué"
+    ]
+   },
+   {
+    "id": 14,
+    "verb": "Devoir",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Ils ___ finir le rapport.",
+    "answer": "ont dû",
+    "options": [
+     "avons dû",
+     "ont dû",
+     "a dû",
+     "as dû"
+    ]
+   },
+   {
+    "id": 15,
+    "verb": "Fermer",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Vous ___ le dossier.",
+    "answer": "êtes en train de fermer",
+    "options": [
+     "suis en train de fermer",
+     "sommes en train de fermer",
+     "êtes en train de fermer",
+     "es en train de fermer"
+    ]
+   },
+   {
+    "id": 16,
+    "verb": "Étudier",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Nous ___ le français chaque soir.",
+    "answer": "étudierons",
+    "options": [
+     "étudieront",
+     "étudierons",
+     "étudierai",
+     "étudieras"
+    ]
+   },
+   {
+    "id": 17,
+    "verb": "Donner",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Je ___ mon accord.",
+    "answer": "ai donné",
+    "options": [
+     "avons donné",
+     "avez donné",
+     "ai donné",
+     "as donné"
+    ]
+   },
+   {
+    "id": 18,
+    "verb": "Répondre",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Je ___ au fournisseur.",
+    "answer": "ai répondu",
+    "options": [
+     "avons répondu",
+     "as répondu",
+     "ai répondu",
+     "avez répondu"
+    ]
+   },
+   {
+    "id": 19,
+    "verb": "Comprendre",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Ils ___ la question.",
+    "answer": "comprendront",
+    "options": [
+     "comprendras",
+     "comprendrons",
+     "comprendrez",
+     "comprendront"
+    ]
+   },
+   {
+    "id": 20,
+    "verb": "Avoir",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Ils ___ deux filles.",
+    "answer": "ont eu",
+    "options": [
+     "ont eu",
+     "ai eu",
+     "avons eu",
+     "as eu"
+    ]
+   }
+  ],
+  [
+   {
+    "id": 21,
+    "verb": "Ouvrir",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Ils ___ l'appel d'offres.",
+    "answer": "ont ouvert",
+    "options": [
+     "ai ouvert",
+     "ont ouvert",
+     "avons ouvert",
+     "avez ouvert"
+    ]
+   },
+   {
+    "id": 22,
+    "verb": "Écouter",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Ils ___ les propositions du client.",
+    "answer": "sont en train d'écouter",
+    "options": [
+     "êtes en train d'écouter",
+     "sont en train d'écouter",
+     "suis en train d'écouter",
+     "es en train d'écouter"
+    ]
+   },
+   {
+    "id": 23,
+    "verb": "Manger",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Tu ___ au bureau à midi.",
+    "answer": "as mangé",
+    "options": [
+     "as mangé",
+     "ai mangé",
+     "avons mangé",
+     "avez mangé"
+    ]
+   },
+   {
+    "id": 24,
+    "verb": "Venir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Tu ___ de Suez.",
+    "answer": "es en train de venir",
+    "options": [
+     "est en train de venir",
+     "sont en train de venir",
+     "es en train de venir",
+     "êtes en train de venir"
+    ]
+   },
+   {
+    "id": 25,
+    "verb": "Détester",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Ils ___ les retards.",
+    "answer": "détesteront",
+    "options": [
+     "détesterez",
+     "détesterons",
+     "détesterai",
+     "détesteront"
+    ]
+   },
+   {
+    "id": 26,
+    "verb": "Savoir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Nous ___ négocier un contrat.",
+    "answer": "sommes en train de savoir",
+    "options": [
+     "es en train de savoir",
+     "est en train de savoir",
+     "suis en train de savoir",
+     "sommes en train de savoir"
+    ]
+   },
+   {
+    "id": 27,
+    "verb": "Partir",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Tu ___ en réunion.",
+    "answer": "partiras",
+    "options": [
+     "partiront",
+     "partirai",
+     "partiras",
+     "partirez"
+    ]
+   },
+   {
+    "id": 28,
+    "verb": "Écouter",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Nous ___ les propositions du client.",
+    "answer": "écouterons",
+    "options": [
+     "écoutera",
+     "écouterez",
+     "écouteront",
+     "écouterons"
+    ]
+   },
+   {
+    "id": 29,
+    "verb": "Travailler",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Vous ___ dans les achats.",
+    "answer": "avez travaillé",
+    "options": [
+     "avons travaillé",
+     "avez travaillé",
+     "as travaillé",
+     "a travaillé"
+    ]
+   },
+   {
+    "id": 30,
+    "verb": "Connaître",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Je ___ bien ce fournisseur.",
+    "answer": "connais",
+    "options": [
+     "connaissent",
+     "connaît",
+     "connais",
+     "connais"
+    ]
+   },
+   {
+    "id": 31,
+    "verb": "Aimer",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Je ___ négocier les contrats.",
+    "answer": "ai aimé",
+    "options": [
+     "avons aimé",
+     "ai aimé",
+     "avez aimé",
+     "as aimé"
+    ]
+   },
+   {
+    "id": 32,
+    "verb": "Vouloir",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Vous ___ signer le contrat.",
+    "answer": "voulez",
+    "options": [
+     "veux",
+     "voulons",
+     "voulez",
+     "veux"
+    ]
+   },
+   {
+    "id": 33,
+    "verb": "Connaître",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Vous ___ bien ce fournisseur.",
+    "answer": "êtes en train de connaître",
+    "options": [
+     "êtes en train de connaître",
+     "es en train de connaître",
+     "sommes en train de connaître",
+     "suis en train de connaître"
+    ]
+   },
+   {
+    "id": 34,
+    "verb": "Acheter",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Il ___ du matériel de sécurité.",
+    "answer": "est en train d'acheter",
+    "options": [
+     "êtes en train d'acheter",
+     "sont en train d'acheter",
+     "es en train d'acheter",
+     "est en train d'acheter"
+    ]
+   },
+   {
+    "id": 35,
+    "verb": "Travailler",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Vous ___ dans les achats.",
+    "answer": "travaillez",
+    "options": [
+     "travaillons",
+     "travaillent",
+     "travaille",
+     "travaillez"
+    ]
+   },
+   {
+    "id": 36,
+    "verb": "Sortir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Je ___ du bureau à 17h.",
+    "answer": "suis en train de sortir",
+    "options": [
+     "sommes en train de sortir",
+     "êtes en train de sortir",
+     "suis en train de sortir",
+     "es en train de sortir"
+    ]
+   },
+   {
+    "id": 37,
+    "verb": "Adorer",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Vous ___ mon travail.",
+    "answer": "adorerez",
+    "options": [
+     "adoreras",
+     "adorerez",
+     "adorerons",
+     "adorerai"
+    ]
+   },
+   {
+    "id": 38,
+    "verb": "Arriver",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Nous ___ au travail à 8h.",
+    "answer": "sommes arrivé(e)s",
+    "options": [
+     "sommes arrivé(e)s",
+     "suis arrivé(e)",
+     "sont arrivé(e)s",
+     "est arrivé(e)"
+    ]
+   },
+   {
+    "id": 39,
+    "verb": "Acheter",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Tu ___ du matériel de sécurité.",
+    "answer": "es en train d'acheter",
+    "options": [
+     "sont en train d'acheter",
+     "es en train d'acheter",
+     "suis en train d'acheter",
+     "sommes en train d'acheter"
+    ]
+   },
+   {
+    "id": 40,
+    "verb": "Nager",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Vous ___ le week-end.",
+    "answer": "nagez",
+    "options": [
+     "nage",
+     "nagez",
+     "nage",
+     "nageons"
+    ]
+   }
+  ],
+  [
+   {
+    "id": 41,
+    "verb": "Finir",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Vous ___ le rapport aujourd'hui.",
+    "answer": "avez fini",
+    "options": [
+     "avez fini",
+     "ai fini",
+     "a fini",
+     "avons fini"
+    ]
+   },
+   {
+    "id": 42,
+    "verb": "Chercher",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Tu ___ un fournisseur fiable.",
+    "answer": "cherches",
+    "options": [
+     "cherchons",
+     "cherches",
+     "cherchez",
+     "cherche"
+    ]
+   },
+   {
+    "id": 43,
+    "verb": "Sortir",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Tu ___ du bureau à 17h.",
+    "answer": "es sorti(e)",
+    "options": [
+     "suis sorti(e)",
+     "êtes sorti(e)(s)",
+     "es sorti(e)",
+     "est sorti(e)"
+    ]
+   },
+   {
+    "id": 44,
+    "verb": "Être",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Ils ___ fatigué aujourd'hui.",
+    "answer": "ont été",
+    "options": [
+     "avez été",
+     "ont été",
+     "ai été",
+     "as été"
+    ]
+   },
+   {
+    "id": 45,
+    "verb": "Partir",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Il ___ en réunion.",
+    "answer": "est parti(e)",
+    "options": [
+     "es parti(e)",
+     "suis parti(e)",
+     "est parti(e)",
+     "êtes parti(e)(s)"
+    ]
+   },
+   {
+    "id": 46,
+    "verb": "Courir",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Nous ___ le matin.",
+    "answer": "avons couru",
+    "options": [
+     "ai couru",
+     "ont couru",
+     "a couru",
+     "avons couru"
+    ]
+   },
+   {
+    "id": 47,
+    "verb": "Acheter",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Tu ___ du matériel de sécurité.",
+    "answer": "as acheté",
+    "options": [
+     "as acheté",
+     "avons acheté",
+     "a acheté",
+     "avez acheté"
+    ]
+   },
+   {
+    "id": 48,
+    "verb": "Pouvoir",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Vous ___ vous rappeler demain.",
+    "answer": "pouvez",
+    "options": [
+     "peuvent",
+     "peux",
+     "peut",
+     "pouvez"
+    ]
+   },
+   {
+    "id": 49,
+    "verb": "Habiter",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Nous ___ au Caire.",
+    "answer": "habitons",
+    "options": [
+     "habitent",
+     "habitons",
+     "habites",
+     "habitez"
+    ]
+   },
+   {
+    "id": 50,
+    "verb": "Partir",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Ils ___ en réunion.",
+    "answer": "partent",
+    "options": [
+     "partons",
+     "partent",
+     "pars",
+     "part"
+    ]
+   },
+   {
+    "id": 51,
+    "verb": "Détester",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Tu ___ les retards.",
+    "answer": "détestes",
+    "options": [
+     "détestent",
+     "déteste",
+     "détestes",
+     "détestons"
+    ]
+   },
+   {
+    "id": 52,
+    "verb": "Prendre",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Il ___ le métro le matin.",
+    "answer": "prend",
+    "options": [
+     "prend",
+     "prenons",
+     "prends",
+     "prends"
+    ]
+   },
+   {
+    "id": 53,
+    "verb": "Fermer",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Il ___ le dossier.",
+    "answer": "a fermé",
+    "options": [
+     "a fermé",
+     "avez fermé",
+     "ai fermé",
+     "as fermé"
+    ]
+   },
+   {
+    "id": 54,
+    "verb": "Demander",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Nous ___ une réduction de prix.",
+    "answer": "demanderons",
+    "options": [
+     "demanderont",
+     "demanderons",
+     "demandera",
+     "demanderez"
+    ]
+   },
+   {
+    "id": 55,
+    "verb": "Entrer",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Ils ___ dans la réunion.",
+    "answer": "entreront",
+    "options": [
+     "entrerez",
+     "entrerons",
+     "entreras",
+     "entreront"
+    ]
+   },
+   {
+    "id": 56,
+    "verb": "Courir",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Ils ___ le matin.",
+    "answer": "ont couru",
+    "options": [
+     "a couru",
+     "as couru",
+     "avons couru",
+     "ont couru"
+    ]
+   },
+   {
+    "id": 57,
+    "verb": "Danser",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Ils ___ à la fête.",
+    "answer": "danseront",
+    "options": [
+     "danserai",
+     "danserons",
+     "danserez",
+     "danseront"
+    ]
+   },
+   {
+    "id": 58,
+    "verb": "Lire",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Nous ___ le contrat attentivement.",
+    "answer": "lisons",
+    "options": [
+     "lisent",
+     "lis",
+     "lit",
+     "lisons"
+    ]
+   },
+   {
+    "id": 59,
+    "verb": "Travailler",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Ils ___ dans les achats.",
+    "answer": "travaillent",
+    "options": [
+     "travaillent",
+     "travaillez",
+     "travaille",
+     "travaillons"
+    ]
+   },
+   {
+    "id": 60,
+    "verb": "Savoir",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Vous ___ négocier un contrat.",
+    "answer": "avez su",
+    "options": [
+     "avez su",
+     "a su",
+     "avons su",
+     "ai su"
+    ]
+   }
+  ],
+  [
+   {
+    "id": 61,
+    "verb": "Parler",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Il ___ français au travail.",
+    "answer": "est en train de parler",
+    "options": [
+     "est en train de parler",
+     "suis en train de parler",
+     "êtes en train de parler",
+     "sont en train de parler"
+    ]
+   },
+   {
+    "id": 62,
+    "verb": "Ouvrir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Je ___ l'appel d'offres.",
+    "answer": "suis en train d'ouvrir",
+    "options": [
+     "sont en train d'ouvrir",
+     "suis en train d'ouvrir",
+     "sommes en train d'ouvrir",
+     "êtes en train d'ouvrir"
+    ]
+   },
+   {
+    "id": 63,
+    "verb": "Ouvrir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Vous ___ l'appel d'offres.",
+    "answer": "êtes en train d'ouvrir",
+    "options": [
+     "es en train d'ouvrir",
+     "êtes en train d'ouvrir",
+     "sommes en train d'ouvrir",
+     "sont en train d'ouvrir"
+    ]
+   },
+   {
+    "id": 64,
+    "verb": "Manger",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Je ___ au bureau à midi.",
+    "answer": "mange",
+    "options": [
+     "mangent",
+     "mangeons",
+     "manges",
+     "mange"
+    ]
+   },
+   {
+    "id": 65,
+    "verb": "Appeler",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Je ___ le fournisseur.",
+    "answer": "suis en train d'appeler",
+    "options": [
+     "es en train d'appeler",
+     "sommes en train d'appeler",
+     "suis en train d'appeler",
+     "sont en train d'appeler"
+    ]
+   },
+   {
+    "id": 66,
+    "verb": "Répondre",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Tu ___ au fournisseur.",
+    "answer": "répondras",
+    "options": [
+     "répondra",
+     "répondront",
+     "répondras",
+     "répondrez"
+    ]
+   },
+   {
+    "id": 67,
+    "verb": "Adorer",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Je ___ mon travail.",
+    "answer": "ai adoré",
+    "options": [
+     "ai adoré",
+     "avons adoré",
+     "a adoré",
+     "ont adoré"
+    ]
+   },
+   {
+    "id": 68,
+    "verb": "Entrer",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Ils ___ dans la réunion.",
+    "answer": "sont entré(e)s",
+    "options": [
+     "es entré(e)",
+     "est entré(e)",
+     "sont entré(e)s",
+     "suis entré(e)"
+    ]
+   },
+   {
+    "id": 69,
+    "verb": "Avoir",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Ils ___ deux filles.",
+    "answer": "auront",
+    "options": [
+     "aurez",
+     "aurons",
+     "auront",
+     "aura"
+    ]
+   },
+   {
+    "id": 70,
+    "verb": "Regarder",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Nous ___ le contrat en détail.",
+    "answer": "sommes en train de regarder",
+    "options": [
+     "êtes en train de regarder",
+     "est en train de regarder",
+     "suis en train de regarder",
+     "sommes en train de regarder"
+    ]
+   },
+   {
+    "id": 71,
+    "verb": "Écouter",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Tu ___ les propositions du client.",
+    "answer": "écoutes",
+    "options": [
+     "écoutez",
+     "écoutes",
+     "écoutent",
+     "écoute"
+    ]
+   },
+   {
+    "id": 72,
+    "verb": "Sortir",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Ils ___ du bureau à 17h.",
+    "answer": "sortiront",
+    "options": [
+     "sortirez",
+     "sortiras",
+     "sortiront",
+     "sortirai"
+    ]
+   },
+   {
+    "id": 73,
+    "verb": "Étudier",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Vous ___ le français chaque soir.",
+    "answer": "étudiez",
+    "options": [
+     "étudie",
+     "étudiez",
+     "étudie",
+     "étudies"
+    ]
+   },
+   {
+    "id": 74,
+    "verb": "Danser",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Nous ___ à la fête.",
+    "answer": "dansons",
+    "options": [
+     "danse",
+     "danses",
+     "dansons",
+     "dansez"
+    ]
+   },
+   {
+    "id": 75,
+    "verb": "Jouer",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Ils ___ au football le vendredi.",
+    "answer": "joueront",
+    "options": [
+     "jouerez",
+     "jouerai",
+     "jouerons",
+     "joueront"
+    ]
+   },
+   {
+    "id": 76,
+    "verb": "Pouvoir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Ils ___ vous rappeler demain.",
+    "answer": "sont en train de pouvoir",
+    "options": [
+     "es en train de pouvoir",
+     "sont en train de pouvoir",
+     "suis en train de pouvoir",
+     "sommes en train de pouvoir"
+    ]
+   },
+   {
+    "id": 77,
+    "verb": "Répondre",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Vous ___ au fournisseur.",
+    "answer": "avez répondu",
+    "options": [
+     "a répondu",
+     "ont répondu",
+     "avez répondu",
+     "as répondu"
+    ]
+   },
+   {
+    "id": 78,
+    "verb": "Trouver",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Je ___ une solution.",
+    "answer": "trouve",
+    "options": [
+     "trouve",
+     "trouve",
+     "trouvent",
+     "trouves"
+    ]
+   },
+   {
+    "id": 79,
+    "verb": "Trouver",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Vous ___ une solution.",
+    "answer": "trouverez",
+    "options": [
+     "trouveras",
+     "trouverons",
+     "trouvera",
+     "trouverez"
+    ]
+   },
+   {
+    "id": 80,
+    "verb": "Boire",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Il ___ un café le matin.",
+    "answer": "est en train de boire",
+    "options": [
+     "es en train de boire",
+     "est en train de boire",
+     "sommes en train de boire",
+     "êtes en train de boire"
+    ]
+   }
+  ],
+  [
+   {
+    "id": 81,
+    "verb": "Comprendre",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Il ___ la question.",
+    "answer": "comprendra",
+    "options": [
+     "comprendra",
+     "comprendras",
+     "comprendront",
+     "comprendrez"
+    ]
+   },
+   {
+    "id": 82,
+    "verb": "Devoir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Tu ___ finir le rapport.",
+    "answer": "es en train de devoir",
+    "options": [
+     "sommes en train de devoir",
+     "suis en train de devoir",
+     "est en train de devoir",
+     "es en train de devoir"
+    ]
+   },
+   {
+    "id": 83,
+    "verb": "Partir",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Je ___ en réunion.",
+    "answer": "suis parti(e)",
+    "options": [
+     "suis parti(e)",
+     "sommes parti(e)s",
+     "êtes parti(e)(s)",
+     "est parti(e)"
+    ]
+   },
+   {
+    "id": 84,
+    "verb": "Aller",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Tu ___ au bureau tous les jours.",
+    "answer": "es allé(e)",
+    "options": [
+     "êtes allé(e)(s)",
+     "es allé(e)",
+     "est allé(e)",
+     "sommes allé(e)s"
+    ]
+   },
+   {
+    "id": 85,
+    "verb": "Écouter",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Vous ___ les propositions du client.",
+    "answer": "écouterez",
+    "options": [
+     "écouterez",
+     "écouterai",
+     "écoutera",
+     "écouteras"
+    ]
+   },
+   {
+    "id": 86,
+    "verb": "Chanter",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Je ___ sous la douche.",
+    "answer": "chanterai",
+    "options": [
+     "chanteras",
+     "chanteront",
+     "chanterons",
+     "chanterai"
+    ]
+   },
+   {
+    "id": 87,
+    "verb": "Manger",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Ils ___ au bureau à midi.",
+    "answer": "sont en train de manger",
+    "options": [
+     "suis en train de manger",
+     "sont en train de manger",
+     "es en train de manger",
+     "est en train de manger"
+    ]
+   },
+   {
+    "id": 88,
+    "verb": "Arriver",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Je ___ au travail à 8h.",
+    "answer": "suis arrivé(e)",
+    "options": [
+     "sont arrivé(e)s",
+     "suis arrivé(e)",
+     "êtes arrivé(e)(s)",
+     "es arrivé(e)"
+    ]
+   },
+   {
+    "id": 89,
+    "verb": "Écouter",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Vous ___ les propositions du client.",
+    "answer": "êtes en train d'écouter",
+    "options": [
+     "es en train d'écouter",
+     "êtes en train d'écouter",
+     "sont en train d'écouter",
+     "est en train d'écouter"
+    ]
+   },
+   {
+    "id": 90,
+    "verb": "Écrire",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Ils ___ un e-mail au fournisseur.",
+    "answer": "sont en train d'écrire",
+    "options": [
+     "suis en train d'écrire",
+     "sont en train d'écrire",
+     "sommes en train d'écrire",
+     "es en train d'écrire"
+    ]
+   },
+   {
+    "id": 91,
+    "verb": "Être",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Nous ___ fatigué aujourd'hui.",
+    "answer": "serons",
+    "options": [
+     "serai",
+     "serons",
+     "seras",
+     "sera"
+    ]
+   },
+   {
+    "id": 92,
+    "verb": "Devoir",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Ils ___ finir le rapport.",
+    "answer": "doivent",
+    "options": [
+     "doivent",
+     "devons",
+     "dois",
+     "doit"
+    ]
+   },
+   {
+    "id": 93,
+    "verb": "Demander",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Nous ___ une réduction de prix.",
+    "answer": "avons demandé",
+    "options": [
+     "as demandé",
+     "ont demandé",
+     "avons demandé",
+     "avez demandé"
+    ]
+   },
+   {
+    "id": 94,
+    "verb": "Prendre",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Vous ___ le métro le matin.",
+    "answer": "prenez",
+    "options": [
+     "prennent",
+     "prends",
+     "prenez",
+     "prends"
+    ]
+   },
+   {
+    "id": 95,
+    "verb": "Acheter",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Il ___ du matériel de sécurité.",
+    "answer": "achètera",
+    "options": [
+     "achètera",
+     "achèterons",
+     "achèterai",
+     "achèteront"
+    ]
+   },
+   {
+    "id": 96,
+    "verb": "Écrire",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Je ___ un e-mail au fournisseur.",
+    "answer": "écrirai",
+    "options": [
+     "écrirons",
+     "écrirez",
+     "écriras",
+     "écrirai"
+    ]
+   },
+   {
+    "id": 97,
+    "verb": "Nager",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Je ___ le week-end.",
+    "answer": "nagerai",
+    "options": [
+     "nagera",
+     "nageront",
+     "nagerai",
+     "nagerez"
+    ]
+   },
+   {
+    "id": 98,
+    "verb": "Boire",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Tu ___ un café le matin.",
+    "answer": "es en train de boire",
+    "options": [
+     "est en train de boire",
+     "suis en train de boire",
+     "es en train de boire",
+     "êtes en train de boire"
+    ]
+   },
+   {
+    "id": 99,
+    "verb": "Donner",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Ils ___ mon accord.",
+    "answer": "ont donné",
+    "options": [
+     "as donné",
+     "ont donné",
+     "a donné",
+     "avez donné"
+    ]
+   },
+   {
+    "id": 100,
+    "verb": "Arriver",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Il ___ au travail à 8h.",
+    "answer": "est en train d'arriver",
+    "options": [
+     "es en train d'arriver",
+     "est en train d'arriver",
+     "suis en train d'arriver",
+     "êtes en train d'arriver"
+    ]
+   }
+  ],
+  [
+   {
+    "id": 101,
+    "verb": "Lire",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Nous ___ le contrat attentivement.",
+    "answer": "avons lu",
+    "options": [
+     "avons lu",
+     "avez lu",
+     "as lu",
+     "ont lu"
+    ]
+   },
+   {
+    "id": 102,
+    "verb": "Adorer",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Ils ___ mon travail.",
+    "answer": "adorent",
+    "options": [
+     "adorez",
+     "adore",
+     "adorons",
+     "adorent"
+    ]
+   },
+   {
+    "id": 103,
+    "verb": "Répondre",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Il ___ au fournisseur.",
+    "answer": "répond",
+    "options": [
+     "réponds",
+     "répond",
+     "répondent",
+     "réponds"
+    ]
+   },
+   {
+    "id": 104,
+    "verb": "Partir",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Vous ___ en réunion.",
+    "answer": "partirez",
+    "options": [
+     "partiront",
+     "partira",
+     "partirez",
+     "partirai"
+    ]
+   },
+   {
+    "id": 105,
+    "verb": "Savoir",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Tu ___ négocier un contrat.",
+    "answer": "sais",
+    "options": [
+     "savez",
+     "savons",
+     "sais",
+     "sais"
+    ]
+   },
+   {
+    "id": 106,
+    "verb": "Manger",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Je ___ au bureau à midi.",
+    "answer": "mangerai",
+    "options": [
+     "mangerez",
+     "mangerai",
+     "mangerons",
+     "mangeront"
+    ]
+   },
+   {
+    "id": 107,
+    "verb": "Habiter",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Nous ___ au Caire.",
+    "answer": "sommes en train d'habiter",
+    "options": [
+     "suis en train d'habiter",
+     "sommes en train d'habiter",
+     "êtes en train d'habiter",
+     "sont en train d'habiter"
+    ]
+   },
+   {
+    "id": 108,
+    "verb": "Écrire",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Ils ___ un e-mail au fournisseur.",
+    "answer": "ont écrit",
+    "options": [
+     "ont écrit",
+     "as écrit",
+     "avez écrit",
+     "ai écrit"
+    ]
+   },
+   {
+    "id": 109,
+    "verb": "Mettre",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Nous ___ le dossier sur le bureau.",
+    "answer": "mettrons",
+    "options": [
+     "mettrez",
+     "mettrai",
+     "mettront",
+     "mettrons"
+    ]
+   },
+   {
+    "id": 110,
+    "verb": "Chercher",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Je ___ un fournisseur fiable.",
+    "answer": "ai cherché",
+    "options": [
+     "as cherché",
+     "ai cherché",
+     "ont cherché",
+     "a cherché"
+    ]
+   },
+   {
+    "id": 111,
+    "verb": "Connaître",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Je ___ bien ce fournisseur.",
+    "answer": "connaîtrai",
+    "options": [
+     "connaîtrez",
+     "connaîtras",
+     "connaîtrai",
+     "connaîtront"
+    ]
+   },
+   {
+    "id": 112,
+    "verb": "Entrer",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Ils ___ dans la réunion.",
+    "answer": "entrent",
+    "options": [
+     "entres",
+     "entre",
+     "entrons",
+     "entrent"
+    ]
+   },
+   {
+    "id": 113,
+    "verb": "Prendre",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Ils ___ le métro le matin.",
+    "answer": "sont en train de prendre",
+    "options": [
+     "es en train de prendre",
+     "est en train de prendre",
+     "êtes en train de prendre",
+     "sont en train de prendre"
+    ]
+   },
+   {
+    "id": 114,
+    "verb": "Écrire",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Nous ___ un e-mail au fournisseur.",
+    "answer": "écrirons",
+    "options": [
+     "écrirons",
+     "écrirez",
+     "écriront",
+     "écrira"
+    ]
+   },
+   {
+    "id": 115,
+    "verb": "Finir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Nous ___ le rapport aujourd'hui.",
+    "answer": "sommes en train de finir",
+    "options": [
+     "sommes en train de finir",
+     "est en train de finir",
+     "êtes en train de finir",
+     "es en train de finir"
+    ]
+   },
+   {
+    "id": 116,
+    "verb": "Boire",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Vous ___ un café le matin.",
+    "answer": "buvez",
+    "options": [
+     "boit",
+     "bois",
+     "buvez",
+     "buvons"
+    ]
+   },
+   {
+    "id": 117,
+    "verb": "Dormir",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Je ___ sept heures par nuit.",
+    "answer": "dormirai",
+    "options": [
+     "dormirons",
+     "dormira",
+     "dormirai",
+     "dormiront"
+    ]
+   },
+   {
+    "id": 118,
+    "verb": "Dire",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Vous ___ toujours la vérité.",
+    "answer": "êtes en train de dire",
+    "options": [
+     "est en train de dire",
+     "êtes en train de dire",
+     "suis en train de dire",
+     "sommes en train de dire"
+    ]
+   },
+   {
+    "id": 119,
+    "verb": "Détester",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Ils ___ les retards.",
+    "answer": "sont en train de détester",
+    "options": [
+     "êtes en train de détester",
+     "sont en train de détester",
+     "suis en train de détester",
+     "sommes en train de détester"
+    ]
+   },
+   {
+    "id": 120,
+    "verb": "Fermer",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Tu ___ le dossier.",
+    "answer": "as fermé",
+    "options": [
+     "avons fermé",
+     "as fermé",
+     "ai fermé",
+     "ont fermé"
+    ]
+   }
+  ],
+  [
+   {
+    "id": 121,
+    "verb": "Appeler",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Tu ___ le fournisseur.",
+    "answer": "as appelé",
+    "options": [
+     "ont appelé",
+     "as appelé",
+     "ai appelé",
+     "a appelé"
+    ]
+   },
+   {
+    "id": 122,
+    "verb": "Faire",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Ils ___ les courses le samedi.",
+    "answer": "feront",
+    "options": [
+     "feront",
+     "ferons",
+     "ferez",
+     "fera"
+    ]
+   },
+   {
+    "id": 123,
+    "verb": "Lire",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Nous ___ le contrat attentivement.",
+    "answer": "lirons",
+    "options": [
+     "lirons",
+     "lira",
+     "liront",
+     "lirai"
+    ]
+   },
+   {
+    "id": 124,
+    "verb": "Avoir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Vous ___ deux filles.",
+    "answer": "êtes en train d'avoir",
+    "options": [
+     "est en train d'avoir",
+     "suis en train d'avoir",
+     "sont en train d'avoir",
+     "êtes en train d'avoir"
+    ]
+   },
+   {
+    "id": 125,
+    "verb": "Connaître",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Tu ___ bien ce fournisseur.",
+    "answer": "es en train de connaître",
+    "options": [
+     "est en train de connaître",
+     "es en train de connaître",
+     "sommes en train de connaître",
+     "sont en train de connaître"
+    ]
+   },
+   {
+    "id": 126,
+    "verb": "Adorer",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Ils ___ mon travail.",
+    "answer": "ont adoré",
+    "options": [
+     "avez adoré",
+     "as adoré",
+     "a adoré",
+     "ont adoré"
+    ]
+   },
+   {
+    "id": 127,
+    "verb": "Partir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Je ___ en réunion.",
+    "answer": "suis en train de partir",
+    "options": [
+     "sommes en train de partir",
+     "es en train de partir",
+     "êtes en train de partir",
+     "suis en train de partir"
+    ]
+   },
+   {
+    "id": 128,
+    "verb": "Nager",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Vous ___ le week-end.",
+    "answer": "avez nagé",
+    "options": [
+     "ai nagé",
+     "a nagé",
+     "as nagé",
+     "avez nagé"
+    ]
+   },
+   {
+    "id": 129,
+    "verb": "Regarder",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Vous ___ le contrat en détail.",
+    "answer": "regardez",
+    "options": [
+     "regarde",
+     "regardez",
+     "regardent",
+     "regarde"
+    ]
+   },
+   {
+    "id": 130,
+    "verb": "Être",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Tu ___ fatigué aujourd'hui.",
+    "answer": "es en train d'être",
+    "options": [
+     "est en train d'être",
+     "suis en train d'être",
+     "sommes en train d'être",
+     "es en train d'être"
+    ]
+   },
+   {
+    "id": 131,
+    "verb": "Jouer",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Vous ___ au football le vendredi.",
+    "answer": "êtes en train de jouer",
+    "options": [
+     "suis en train de jouer",
+     "êtes en train de jouer",
+     "es en train de jouer",
+     "est en train de jouer"
+    ]
+   },
+   {
+    "id": 132,
+    "verb": "Dormir",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Il ___ sept heures par nuit.",
+    "answer": "a dormi",
+    "options": [
+     "as dormi",
+     "a dormi",
+     "ai dormi",
+     "ont dormi"
+    ]
+   },
+   {
+    "id": 133,
+    "verb": "Regarder",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Il ___ le contrat en détail.",
+    "answer": "a regardé",
+    "options": [
+     "ont regardé",
+     "avez regardé",
+     "ai regardé",
+     "a regardé"
+    ]
+   },
+   {
+    "id": 134,
+    "verb": "Devoir",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Tu ___ finir le rapport.",
+    "answer": "devras",
+    "options": [
+     "devrons",
+     "devrai",
+     "devras",
+     "devrez"
+    ]
+   },
+   {
+    "id": 135,
+    "verb": "Danser",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Je ___ à la fête.",
+    "answer": "danserai",
+    "options": [
+     "danserai",
+     "danserez",
+     "danseront",
+     "dansera"
+    ]
+   },
+   {
+    "id": 136,
+    "verb": "Habiter",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Il ___ au Caire.",
+    "answer": "a habité",
+    "options": [
+     "avez habité",
+     "as habité",
+     "a habité",
+     "avons habité"
+    ]
+   },
+   {
+    "id": 137,
+    "verb": "Aimer",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Je ___ négocier les contrats.",
+    "answer": "suis en train d'aimer",
+    "options": [
+     "sommes en train d'aimer",
+     "es en train d'aimer",
+     "suis en train d'aimer",
+     "êtes en train d'aimer"
+    ]
+   },
+   {
+    "id": 138,
+    "verb": "Détester",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Vous ___ les retards.",
+    "answer": "avez détesté",
+    "options": [
+     "avez détesté",
+     "ont détesté",
+     "ai détesté",
+     "avons détesté"
+    ]
+   },
+   {
+    "id": 139,
+    "verb": "Partir",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Tu ___ en réunion.",
+    "answer": "pars",
+    "options": [
+     "pars",
+     "part",
+     "partons",
+     "pars"
+    ]
+   },
+   {
+    "id": 140,
+    "verb": "Devoir",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Nous ___ finir le rapport.",
+    "answer": "devrons",
+    "options": [
+     "devront",
+     "devrons",
+     "devrai",
+     "devras"
+    ]
+   }
+  ],
+  [
+   {
+    "id": 141,
+    "verb": "Connaître",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Ils ___ bien ce fournisseur.",
+    "answer": "ont connu",
+    "options": [
+     "a connu",
+     "ai connu",
+     "avons connu",
+     "ont connu"
+    ]
+   },
+   {
+    "id": 142,
+    "verb": "Mettre",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Tu ___ le dossier sur le bureau.",
+    "answer": "mets",
+    "options": [
+     "mettons",
+     "mets",
+     "met",
+     "mets"
+    ]
+   },
+   {
+    "id": 143,
+    "verb": "Avoir",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Il ___ deux filles.",
+    "answer": "aura",
+    "options": [
+     "aurons",
+     "aurai",
+     "aura",
+     "auras"
+    ]
+   },
+   {
+    "id": 144,
+    "verb": "Dormir",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Il ___ sept heures par nuit.",
+    "answer": "dort",
+    "options": [
+     "dormons",
+     "dors",
+     "dorment",
+     "dort"
+    ]
+   },
+   {
+    "id": 145,
+    "verb": "Savoir",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Ils ___ négocier un contrat.",
+    "answer": "savent",
+    "options": [
+     "sait",
+     "sais",
+     "savent",
+     "sais"
+    ]
+   },
+   {
+    "id": 146,
+    "verb": "Travailler",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Je ___ dans les achats.",
+    "answer": "suis en train de travailler",
+    "options": [
+     "sommes en train de travailler",
+     "est en train de travailler",
+     "sont en train de travailler",
+     "suis en train de travailler"
+    ]
+   },
+   {
+    "id": 147,
+    "verb": "Étudier",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Vous ___ le français chaque soir.",
+    "answer": "étudierez",
+    "options": [
+     "étudieras",
+     "étudierez",
+     "étudierons",
+     "étudieront"
+    ]
+   },
+   {
+    "id": 148,
+    "verb": "Regarder",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Nous ___ le contrat en détail.",
+    "answer": "regardons",
+    "options": [
+     "regarde",
+     "regardez",
+     "regardons",
+     "regardes"
+    ]
+   },
+   {
+    "id": 149,
+    "verb": "Chercher",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Il ___ un fournisseur fiable.",
+    "answer": "a cherché",
+    "options": [
+     "a cherché",
+     "avons cherché",
+     "as cherché",
+     "avez cherché"
+    ]
+   },
+   {
+    "id": 150,
+    "verb": "Détester",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Tu ___ les retards.",
+    "answer": "détesteras",
+    "options": [
+     "détesteront",
+     "détesterai",
+     "détesterez",
+     "détesteras"
+    ]
+   },
+   {
+    "id": 151,
+    "verb": "Chanter",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Je ___ sous la douche.",
+    "answer": "suis en train de chanter",
+    "options": [
+     "êtes en train de chanter",
+     "es en train de chanter",
+     "suis en train de chanter",
+     "sommes en train de chanter"
+    ]
+   },
+   {
+    "id": 152,
+    "verb": "Sortir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Nous ___ du bureau à 17h.",
+    "answer": "sommes en train de sortir",
+    "options": [
+     "est en train de sortir",
+     "êtes en train de sortir",
+     "sommes en train de sortir",
+     "sont en train de sortir"
+    ]
+   },
+   {
+    "id": 153,
+    "verb": "Demander",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Tu ___ une réduction de prix.",
+    "answer": "demanderas",
+    "options": [
+     "demanderont",
+     "demanderez",
+     "demanderas",
+     "demandera"
+    ]
+   },
+   {
+    "id": 154,
+    "verb": "Dormir",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Il ___ sept heures par nuit.",
+    "answer": "dormira",
+    "options": [
+     "dormirai",
+     "dormirez",
+     "dormira",
+     "dormiront"
+    ]
+   },
+   {
+    "id": 155,
+    "verb": "Chanter",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Nous ___ sous la douche.",
+    "answer": "avons chanté",
+    "options": [
+     "ont chanté",
+     "as chanté",
+     "ai chanté",
+     "avons chanté"
+    ]
+   },
+   {
+    "id": 156,
+    "verb": "Danser",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Ils ___ à la fête.",
+    "answer": "sont en train de danser",
+    "options": [
+     "est en train de danser",
+     "suis en train de danser",
+     "es en train de danser",
+     "sont en train de danser"
+    ]
+   },
+   {
+    "id": 157,
+    "verb": "Vouloir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Je ___ signer le contrat.",
+    "answer": "suis en train de vouloir",
+    "options": [
+     "sont en train de vouloir",
+     "es en train de vouloir",
+     "êtes en train de vouloir",
+     "suis en train de vouloir"
+    ]
+   },
+   {
+    "id": 158,
+    "verb": "Trouver",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Ils ___ une solution.",
+    "answer": "trouvent",
+    "options": [
+     "trouves",
+     "trouve",
+     "trouvent",
+     "trouve"
+    ]
+   },
+   {
+    "id": 159,
+    "verb": "Entrer",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Tu ___ dans la réunion.",
+    "answer": "es en train d'entrer",
+    "options": [
+     "sont en train d'entrer",
+     "est en train d'entrer",
+     "es en train d'entrer",
+     "sommes en train d'entrer"
+    ]
+   },
+   {
+    "id": 160,
+    "verb": "Aller",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Je ___ au bureau tous les jours.",
+    "answer": "irai",
+    "options": [
+     "irez",
+     "iras",
+     "irai",
+     "irons"
+    ]
+   }
+  ],
+  [
+   {
+    "id": 161,
+    "verb": "Appeler",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Tu ___ le fournisseur.",
+    "answer": "appelleras",
+    "options": [
+     "appellerai",
+     "appelleront",
+     "appelleras",
+     "appellera"
+    ]
+   },
+   {
+    "id": 162,
+    "verb": "Étudier",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Ils ___ le français chaque soir.",
+    "answer": "ont étudié",
+    "options": [
+     "ai étudié",
+     "as étudié",
+     "ont étudié",
+     "avons étudié"
+    ]
+   },
+   {
+    "id": 163,
+    "verb": "Mettre",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Tu ___ le dossier sur le bureau.",
+    "answer": "es en train de mettre",
+    "options": [
+     "suis en train de mettre",
+     "es en train de mettre",
+     "sont en train de mettre",
+     "est en train de mettre"
+    ]
+   },
+   {
+    "id": 164,
+    "verb": "Lire",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Il ___ le contrat attentivement.",
+    "answer": "a lu",
+    "options": [
+     "a lu",
+     "avez lu",
+     "ai lu",
+     "ont lu"
+    ]
+   },
+   {
+    "id": 165,
+    "verb": "Avoir",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Tu ___ deux filles.",
+    "answer": "as eu",
+    "options": [
+     "ai eu",
+     "avons eu",
+     "as eu",
+     "avez eu"
+    ]
+   },
+   {
+    "id": 166,
+    "verb": "Trouver",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Tu ___ une solution.",
+    "answer": "as trouvé",
+    "options": [
+     "a trouvé",
+     "as trouvé",
+     "avons trouvé",
+     "avez trouvé"
+    ]
+   },
+   {
+    "id": 167,
+    "verb": "Être",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Il ___ fatigué aujourd'hui.",
+    "answer": "est en train d'être",
+    "options": [
+     "es en train d'être",
+     "est en train d'être",
+     "suis en train d'être",
+     "sont en train d'être"
+    ]
+   },
+   {
+    "id": 168,
+    "verb": "Trouver",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Ils ___ une solution.",
+    "answer": "ont trouvé",
+    "options": [
+     "a trouvé",
+     "avez trouvé",
+     "avons trouvé",
+     "ont trouvé"
+    ]
+   },
+   {
+    "id": 169,
+    "verb": "Adorer",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Ils ___ mon travail.",
+    "answer": "sont en train d'adorer",
+    "options": [
+     "est en train d'adorer",
+     "es en train d'adorer",
+     "suis en train d'adorer",
+     "sont en train d'adorer"
+    ]
+   },
+   {
+    "id": 170,
+    "verb": "Écrire",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Tu ___ un e-mail au fournisseur.",
+    "answer": "écris",
+    "options": [
+     "écrivez",
+     "écrit",
+     "écrivent",
+     "écris"
+    ]
+   },
+   {
+    "id": 171,
+    "verb": "Dire",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Tu ___ toujours la vérité.",
+    "answer": "dis",
+    "options": [
+     "disent",
+     "dis",
+     "dit",
+     "dis"
+    ]
+   },
+   {
+    "id": 172,
+    "verb": "Trouver",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Vous ___ une solution.",
+    "answer": "êtes en train de trouver",
+    "options": [
+     "sont en train de trouver",
+     "es en train de trouver",
+     "suis en train de trouver",
+     "êtes en train de trouver"
+    ]
+   },
+   {
+    "id": 173,
+    "verb": "Parler",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Nous ___ français au travail.",
+    "answer": "parlons",
+    "options": [
+     "parle",
+     "parle",
+     "parlons",
+     "parlent"
+    ]
+   },
+   {
+    "id": 174,
+    "verb": "Étudier",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Nous ___ le français chaque soir.",
+    "answer": "avons étudié",
+    "options": [
+     "avez étudié",
+     "a étudié",
+     "ai étudié",
+     "avons étudié"
+    ]
+   },
+   {
+    "id": 175,
+    "verb": "Dire",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Ils ___ toujours la vérité.",
+    "answer": "diront",
+    "options": [
+     "dirons",
+     "diront",
+     "dira",
+     "diras"
+    ]
+   },
+   {
+    "id": 176,
+    "verb": "Commencer",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Il ___ la négociation.",
+    "answer": "commencera",
+    "options": [
+     "commenceront",
+     "commenceras",
+     "commencerons",
+     "commencera"
+    ]
+   },
+   {
+    "id": 177,
+    "verb": "Savoir",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Il ___ négocier un contrat.",
+    "answer": "saura",
+    "options": [
+     "saurez",
+     "sauront",
+     "saura",
+     "saurons"
+    ]
+   },
+   {
+    "id": 178,
+    "verb": "Étudier",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Nous ___ le français chaque soir.",
+    "answer": "sommes en train d'étudier",
+    "options": [
+     "sont en train d'étudier",
+     "es en train d'étudier",
+     "suis en train d'étudier",
+     "sommes en train d'étudier"
+    ]
+   },
+   {
+    "id": 179,
+    "verb": "Finir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Tu ___ le rapport aujourd'hui.",
+    "answer": "es en train de finir",
+    "options": [
+     "est en train de finir",
+     "es en train de finir",
+     "suis en train de finir",
+     "êtes en train de finir"
+    ]
+   },
+   {
+    "id": 180,
+    "verb": "Vouloir",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Nous ___ signer le contrat.",
+    "answer": "voulons",
+    "options": [
+     "veux",
+     "voulons",
+     "veulent",
+     "voulez"
+    ]
+   }
+  ],
+  [
+   {
+    "id": 181,
+    "verb": "Écrire",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Il ___ un e-mail au fournisseur.",
+    "answer": "écrit",
+    "options": [
+     "écrivons",
+     "écrivez",
+     "écrit",
+     "écrivent"
+    ]
+   },
+   {
+    "id": 182,
+    "verb": "Regarder",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Je ___ le contrat en détail.",
+    "answer": "regarderai",
+    "options": [
+     "regarderez",
+     "regarderai",
+     "regarderont",
+     "regardera"
+    ]
+   },
+   {
+    "id": 183,
+    "verb": "Arriver",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Il ___ au travail à 8h.",
+    "answer": "arrive",
+    "options": [
+     "arrive",
+     "arrivez",
+     "arrives",
+     "arrive"
+    ]
+   },
+   {
+    "id": 184,
+    "verb": "Mettre",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Vous ___ le dossier sur le bureau.",
+    "answer": "mettez",
+    "options": [
+     "mets",
+     "mettez",
+     "mettons",
+     "met"
+    ]
+   },
+   {
+    "id": 185,
+    "verb": "Connaître",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Il ___ bien ce fournisseur.",
+    "answer": "connaît",
+    "options": [
+     "connaissons",
+     "connaît",
+     "connaissez",
+     "connais"
+    ]
+   },
+   {
+    "id": 186,
+    "verb": "Ouvrir",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Ils ___ l'appel d'offres.",
+    "answer": "ouvriront",
+    "options": [
+     "ouvrirons",
+     "ouvriras",
+     "ouvriront",
+     "ouvrira"
+    ]
+   },
+   {
+    "id": 187,
+    "verb": "Écouter",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Tu ___ les propositions du client.",
+    "answer": "as écouté",
+    "options": [
+     "ai écouté",
+     "avez écouté",
+     "as écouté",
+     "a écouté"
+    ]
+   },
+   {
+    "id": 188,
+    "verb": "Devoir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Il ___ finir le rapport.",
+    "answer": "est en train de devoir",
+    "options": [
+     "êtes en train de devoir",
+     "sommes en train de devoir",
+     "sont en train de devoir",
+     "est en train de devoir"
+    ]
+   },
+   {
+    "id": 189,
+    "verb": "Faire",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Nous ___ les courses le samedi.",
+    "answer": "ferons",
+    "options": [
+     "ferons",
+     "ferai",
+     "fera",
+     "ferez"
+    ]
+   },
+   {
+    "id": 190,
+    "verb": "Commencer",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Tu ___ la négociation.",
+    "answer": "es en train de commencer",
+    "options": [
+     "es en train de commencer",
+     "suis en train de commencer",
+     "êtes en train de commencer",
+     "est en train de commencer"
+    ]
+   },
+   {
+    "id": 191,
+    "verb": "Dire",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Il ___ toujours la vérité.",
+    "answer": "dit",
+    "options": [
+     "dites",
+     "disent",
+     "disons",
+     "dit"
+    ]
+   },
+   {
+    "id": 192,
+    "verb": "Vouloir",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Je ___ signer le contrat.",
+    "answer": "ai voulu",
+    "options": [
+     "ont voulu",
+     "a voulu",
+     "as voulu",
+     "ai voulu"
+    ]
+   },
+   {
+    "id": 193,
+    "verb": "Lire",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Ils ___ le contrat attentivement.",
+    "answer": "liront",
+    "options": [
+     "liras",
+     "liront",
+     "lira",
+     "lirons"
+    ]
+   },
+   {
+    "id": 194,
+    "verb": "Parler",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Vous ___ français au travail.",
+    "answer": "parlerez",
+    "options": [
+     "parlerez",
+     "parlerons",
+     "parlerai",
+     "parlera"
+    ]
+   },
+   {
+    "id": 195,
+    "verb": "Regarder",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Il ___ le contrat en détail.",
+    "answer": "est en train de regarder",
+    "options": [
+     "êtes en train de regarder",
+     "es en train de regarder",
+     "sommes en train de regarder",
+     "est en train de regarder"
+    ]
+   },
+   {
+    "id": 196,
+    "verb": "Travailler",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Ils ___ dans les achats.",
+    "answer": "ont travaillé",
+    "options": [
+     "ont travaillé",
+     "avez travaillé",
+     "ai travaillé",
+     "avons travaillé"
+    ]
+   },
+   {
+    "id": 197,
+    "verb": "Faire",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Nous ___ les courses le samedi.",
+    "answer": "sommes en train de faire",
+    "options": [
+     "est en train de faire",
+     "suis en train de faire",
+     "sommes en train de faire",
+     "es en train de faire"
+    ]
+   },
+   {
+    "id": 198,
+    "verb": "Boire",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Vous ___ un café le matin.",
+    "answer": "boirez",
+    "options": [
+     "boirez",
+     "boiras",
+     "boirons",
+     "boirai"
+    ]
+   },
+   {
+    "id": 199,
+    "verb": "Vouloir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Ils ___ signer le contrat.",
+    "answer": "sont en train de vouloir",
+    "options": [
+     "sont en train de vouloir",
+     "est en train de vouloir",
+     "sommes en train de vouloir",
+     "êtes en train de vouloir"
+    ]
+   },
+   {
+    "id": 200,
+    "verb": "Parler",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Nous ___ français au travail.",
+    "answer": "parlerons",
+    "options": [
+     "parlera",
+     "parlerons",
+     "parleront",
+     "parlerai"
+    ]
+   }
+  ],
+  [
+   {
+    "id": 201,
+    "verb": "Partir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Il ___ en réunion.",
+    "answer": "est en train de partir",
+    "options": [
+     "suis en train de partir",
+     "êtes en train de partir",
+     "sont en train de partir",
+     "est en train de partir"
+    ]
+   },
+   {
+    "id": 202,
+    "verb": "Lire",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Tu ___ le contrat attentivement.",
+    "answer": "es en train de lire",
+    "options": [
+     "sont en train de lire",
+     "suis en train de lire",
+     "es en train de lire",
+     "sommes en train de lire"
+    ]
+   },
+   {
+    "id": 203,
+    "verb": "Boire",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Tu ___ un café le matin.",
+    "answer": "as bu",
+    "options": [
+     "ont bu",
+     "avez bu",
+     "a bu",
+     "as bu"
+    ]
+   },
+   {
+    "id": 204,
+    "verb": "Être",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Je ___ fatigué aujourd'hui.",
+    "answer": "suis",
+    "options": [
+     "es",
+     "est",
+     "sommes",
+     "suis"
+    ]
+   },
+   {
+    "id": 205,
+    "verb": "Demander",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Je ___ une réduction de prix.",
+    "answer": "ai demandé",
+    "options": [
+     "avez demandé",
+     "ai demandé",
+     "ont demandé",
+     "as demandé"
+    ]
+   },
+   {
+    "id": 206,
+    "verb": "Aller",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Nous ___ au bureau tous les jours.",
+    "answer": "irons",
+    "options": [
+     "iras",
+     "irons",
+     "iront",
+     "irez"
+    ]
+   },
+   {
+    "id": 207,
+    "verb": "Manger",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Je ___ au bureau à midi.",
+    "answer": "suis en train de manger",
+    "options": [
+     "est en train de manger",
+     "suis en train de manger",
+     "sommes en train de manger",
+     "es en train de manger"
+    ]
+   },
+   {
+    "id": 208,
+    "verb": "Habiter",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Vous ___ au Caire.",
+    "answer": "êtes en train d'habiter",
+    "options": [
+     "es en train d'habiter",
+     "est en train d'habiter",
+     "suis en train d'habiter",
+     "êtes en train d'habiter"
+    ]
+   },
+   {
+    "id": 209,
+    "verb": "Danser",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Nous ___ à la fête.",
+    "answer": "avons dansé",
+    "options": [
+     "avez dansé",
+     "a dansé",
+     "avons dansé",
+     "ont dansé"
+    ]
+   },
+   {
+    "id": 210,
+    "verb": "Courir",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Je ___ le matin.",
+    "answer": "courrai",
+    "options": [
+     "courrez",
+     "courront",
+     "courra",
+     "courrai"
+    ]
+   },
+   {
+    "id": 211,
+    "verb": "Savoir",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Je ___ négocier un contrat.",
+    "answer": "ai su",
+    "options": [
+     "as su",
+     "avons su",
+     "ai su",
+     "a su"
+    ]
+   },
+   {
+    "id": 212,
+    "verb": "Adorer",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Vous ___ mon travail.",
+    "answer": "adorez",
+    "options": [
+     "adore",
+     "adorent",
+     "adorez",
+     "adore"
+    ]
+   },
+   {
+    "id": 213,
+    "verb": "Chercher",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Vous ___ un fournisseur fiable.",
+    "answer": "êtes en train de chercher",
+    "options": [
+     "est en train de chercher",
+     "êtes en train de chercher",
+     "es en train de chercher",
+     "sont en train de chercher"
+    ]
+   },
+   {
+    "id": 214,
+    "verb": "Venir",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Nous ___ de Suez.",
+    "answer": "viendrons",
+    "options": [
+     "viendrez",
+     "viendront",
+     "viendrons",
+     "viendra"
+    ]
+   },
+   {
+    "id": 215,
+    "verb": "Fermer",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Nous ___ le dossier.",
+    "answer": "fermons",
+    "options": [
+     "fermes",
+     "ferme",
+     "fermons",
+     "fermez"
+    ]
+   },
+   {
+    "id": 216,
+    "verb": "Venir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Il ___ de Suez.",
+    "answer": "est en train de venir",
+    "options": [
+     "êtes en train de venir",
+     "sont en train de venir",
+     "est en train de venir",
+     "suis en train de venir"
+    ]
+   },
+   {
+    "id": 217,
+    "verb": "Manger",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Nous ___ au bureau à midi.",
+    "answer": "mangerons",
+    "options": [
+     "mangeront",
+     "mangera",
+     "mangerez",
+     "mangerons"
+    ]
+   },
+   {
+    "id": 218,
+    "verb": "Mettre",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Ils ___ le dossier sur le bureau.",
+    "answer": "sont en train de mettre",
+    "options": [
+     "sommes en train de mettre",
+     "sont en train de mettre",
+     "es en train de mettre",
+     "est en train de mettre"
+    ]
+   },
+   {
+    "id": 219,
+    "verb": "Comprendre",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Ils ___ la question.",
+    "answer": "sont en train de comprendre",
+    "options": [
+     "sont en train de comprendre",
+     "sommes en train de comprendre",
+     "es en train de comprendre",
+     "est en train de comprendre"
+    ]
+   },
+   {
+    "id": 220,
+    "verb": "Parler",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Je ___ français au travail.",
+    "answer": "parle",
+    "options": [
+     "parle",
+     "parle",
+     "parlons",
+     "parlent"
+    ]
+   }
+  ],
+  [
+   {
+    "id": 221,
+    "verb": "Écouter",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Il ___ les propositions du client.",
+    "answer": "a écouté",
+    "options": [
+     "avez écouté",
+     "a écouté",
+     "ai écouté",
+     "as écouté"
+    ]
+   },
+   {
+    "id": 222,
+    "verb": "Appeler",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Vous ___ le fournisseur.",
+    "answer": "appellerez",
+    "options": [
+     "appellerez",
+     "appellerai",
+     "appelleras",
+     "appellerons"
+    ]
+   },
+   {
+    "id": 223,
+    "verb": "Chanter",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Il ___ sous la douche.",
+    "answer": "chante",
+    "options": [
+     "chantez",
+     "chante",
+     "chante",
+     "chantons"
+    ]
+   },
+   {
+    "id": 224,
+    "verb": "Fermer",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Nous ___ le dossier.",
+    "answer": "fermerons",
+    "options": [
+     "fermeront",
+     "fermerons",
+     "fermerez",
+     "fermera"
+    ]
+   },
+   {
+    "id": 225,
+    "verb": "Ouvrir",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Nous ___ l'appel d'offres.",
+    "answer": "ouvrons",
+    "options": [
+     "ouvrent",
+     "ouvre",
+     "ouvrons",
+     "ouvres"
+    ]
+   },
+   {
+    "id": 226,
+    "verb": "Nager",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Ils ___ le week-end.",
+    "answer": "sont en train de nager",
+    "options": [
+     "sommes en train de nager",
+     "es en train de nager",
+     "êtes en train de nager",
+     "sont en train de nager"
+    ]
+   },
+   {
+    "id": 227,
+    "verb": "Avoir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Nous ___ deux filles.",
+    "answer": "sommes en train d'avoir",
+    "options": [
+     "êtes en train d'avoir",
+     "sommes en train d'avoir",
+     "sont en train d'avoir",
+     "est en train d'avoir"
+    ]
+   },
+   {
+    "id": 228,
+    "verb": "Avoir",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Vous ___ deux filles.",
+    "answer": "avez",
+    "options": [
+     "as",
+     "ai",
+     "a",
+     "avez"
+    ]
+   },
+   {
+    "id": 229,
+    "verb": "Finir",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Tu ___ le rapport aujourd'hui.",
+    "answer": "finiras",
+    "options": [
+     "finiras",
+     "finirai",
+     "finirons",
+     "finiront"
+    ]
+   },
+   {
+    "id": 230,
+    "verb": "Demander",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Je ___ une réduction de prix.",
+    "answer": "suis en train de demander",
+    "options": [
+     "êtes en train de demander",
+     "suis en train de demander",
+     "sont en train de demander",
+     "est en train de demander"
+    ]
+   },
+   {
+    "id": 231,
+    "verb": "Prendre",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Ils ___ le métro le matin.",
+    "answer": "ont pris",
+    "options": [
+     "as pris",
+     "avons pris",
+     "ai pris",
+     "ont pris"
+    ]
+   },
+   {
+    "id": 232,
+    "verb": "Donner",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Tu ___ mon accord.",
+    "answer": "donnes",
+    "options": [
+     "donne",
+     "donnez",
+     "donnes",
+     "donnent"
+    ]
+   },
+   {
+    "id": 233,
+    "verb": "Habiter",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Ils ___ au Caire.",
+    "answer": "habitent",
+    "options": [
+     "habite",
+     "habites",
+     "habitez",
+     "habitent"
+    ]
+   },
+   {
+    "id": 234,
+    "verb": "Entrer",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Il ___ dans la réunion.",
+    "answer": "est entré(e)",
+    "options": [
+     "est entré(e)",
+     "es entré(e)",
+     "sommes entré(e)s",
+     "sont entré(e)s"
+    ]
+   },
+   {
+    "id": 235,
+    "verb": "Entrer",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Je ___ dans la réunion.",
+    "answer": "entrerai",
+    "options": [
+     "entrera",
+     "entrerons",
+     "entrerai",
+     "entreront"
+    ]
+   },
+   {
+    "id": 236,
+    "verb": "Dire",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Nous ___ toujours la vérité.",
+    "answer": "avons dit",
+    "options": [
+     "avez dit",
+     "ai dit",
+     "a dit",
+     "avons dit"
+    ]
+   },
+   {
+    "id": 237,
+    "verb": "Chercher",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Vous ___ un fournisseur fiable.",
+    "answer": "chercherez",
+    "options": [
+     "cherchera",
+     "chercheront",
+     "chercherez",
+     "chercherai"
+    ]
+   },
+   {
+    "id": 238,
+    "verb": "Faire",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Je ___ les courses le samedi.",
+    "answer": "fais",
+    "options": [
+     "font",
+     "fais",
+     "faites",
+     "fait"
+    ]
+   },
+   {
+    "id": 239,
+    "verb": "Commencer",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Ils ___ la négociation.",
+    "answer": "sont en train de commencer",
+    "options": [
+     "sont en train de commencer",
+     "sommes en train de commencer",
+     "est en train de commencer",
+     "suis en train de commencer"
+    ]
+   },
+   {
+    "id": 240,
+    "verb": "Chanter",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Je ___ sous la douche.",
+    "answer": "ai chanté",
+    "options": [
+     "ai chanté",
+     "ont chanté",
+     "avons chanté",
+     "avez chanté"
+    ]
+   }
+  ],
+  [
+   {
+    "id": 241,
+    "verb": "Chercher",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Je ___ un fournisseur fiable.",
+    "answer": "cherche",
+    "options": [
+     "cherchons",
+     "cherchent",
+     "cherches",
+     "cherche"
+    ]
+   },
+   {
+    "id": 242,
+    "verb": "Aller",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Il ___ au bureau tous les jours.",
+    "answer": "va",
+    "options": [
+     "allez",
+     "allons",
+     "vas",
+     "va"
+    ]
+   },
+   {
+    "id": 243,
+    "verb": "Courir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Ils ___ le matin.",
+    "answer": "sont en train de courir",
+    "options": [
+     "sont en train de courir",
+     "est en train de courir",
+     "suis en train de courir",
+     "es en train de courir"
+    ]
+   },
+   {
+    "id": 244,
+    "verb": "Fermer",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Je ___ le dossier.",
+    "answer": "fermerai",
+    "options": [
+     "fermerez",
+     "fermerons",
+     "fermera",
+     "fermerai"
+    ]
+   },
+   {
+    "id": 245,
+    "verb": "Jouer",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Il ___ au football le vendredi.",
+    "answer": "joue",
+    "options": [
+     "jouons",
+     "joue",
+     "joue",
+     "jouent"
+    ]
+   },
+   {
+    "id": 246,
+    "verb": "Acheter",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Tu ___ du matériel de sécurité.",
+    "answer": "achètes",
+    "options": [
+     "achetez",
+     "achète",
+     "achètes",
+     "achetons"
+    ]
+   },
+   {
+    "id": 247,
+    "verb": "Faire",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Vous ___ les courses le samedi.",
+    "answer": "avez fait",
+    "options": [
+     "a fait",
+     "avez fait",
+     "as fait",
+     "ai fait"
+    ]
+   },
+   {
+    "id": 248,
+    "verb": "Commencer",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Nous ___ la négociation.",
+    "answer": "commencerons",
+    "options": [
+     "commencerez",
+     "commencera",
+     "commencerons",
+     "commenceras"
+    ]
+   },
+   {
+    "id": 249,
+    "verb": "Venir",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Vous ___ de Suez.",
+    "answer": "êtes venu(e)(s)",
+    "options": [
+     "suis venu(e)",
+     "est venu(e)",
+     "sont venu(e)s",
+     "êtes venu(e)(s)"
+    ]
+   },
+   {
+    "id": 250,
+    "verb": "Chercher",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Ils ___ un fournisseur fiable.",
+    "answer": "chercheront",
+    "options": [
+     "chercherons",
+     "chercheras",
+     "chercheront",
+     "chercherez"
+    ]
+   },
+   {
+    "id": 251,
+    "verb": "Danser",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Vous ___ à la fête.",
+    "answer": "dansez",
+    "options": [
+     "danses",
+     "dansons",
+     "dansent",
+     "dansez"
+    ]
+   },
+   {
+    "id": 252,
+    "verb": "Nager",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Tu ___ le week-end.",
+    "answer": "es en train de nager",
+    "options": [
+     "est en train de nager",
+     "es en train de nager",
+     "sommes en train de nager",
+     "suis en train de nager"
+    ]
+   },
+   {
+    "id": 253,
+    "verb": "Lire",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Il ___ le contrat attentivement.",
+    "answer": "est en train de lire",
+    "options": [
+     "sont en train de lire",
+     "est en train de lire",
+     "es en train de lire",
+     "sommes en train de lire"
+    ]
+   },
+   {
+    "id": 254,
+    "verb": "Voir",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Nous ___ le directeur demain.",
+    "answer": "sommes en train de voir",
+    "options": [
+     "es en train de voir",
+     "est en train de voir",
+     "sont en train de voir",
+     "sommes en train de voir"
+    ]
+   },
+   {
+    "id": 255,
+    "verb": "Venir",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Ils ___ de Suez.",
+    "answer": "viennent",
+    "options": [
+     "viens",
+     "venez",
+     "viennent",
+     "viens"
+    ]
+   },
+   {
+    "id": 256,
+    "verb": "Fermer",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Ils ___ le dossier.",
+    "answer": "sont en train de fermer",
+    "options": [
+     "es en train de fermer",
+     "sommes en train de fermer",
+     "êtes en train de fermer",
+     "sont en train de fermer"
+    ]
+   },
+   {
+    "id": 257,
+    "verb": "Venir",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Il ___ de Suez.",
+    "answer": "vient",
+    "options": [
+     "viens",
+     "venons",
+     "vient",
+     "viennent"
+    ]
+   },
+   {
+    "id": 258,
+    "verb": "Jouer",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Ils ___ au football le vendredi.",
+    "answer": "sont en train de jouer",
+    "options": [
+     "est en train de jouer",
+     "sont en train de jouer",
+     "es en train de jouer",
+     "sommes en train de jouer"
+    ]
+   },
+   {
+    "id": 259,
+    "verb": "Commencer",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Vous ___ la négociation.",
+    "answer": "commencez",
+    "options": [
+     "commençons",
+     "commences",
+     "commencent",
+     "commencez"
+    ]
+   },
+   {
+    "id": 260,
+    "verb": "Demander",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Vous ___ une réduction de prix.",
+    "answer": "êtes en train de demander",
+    "options": [
+     "sont en train de demander",
+     "est en train de demander",
+     "sommes en train de demander",
+     "êtes en train de demander"
+    ]
+   }
+  ],
+  [
+   {
+    "id": 261,
+    "verb": "Prendre",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Vous ___ le métro le matin.",
+    "answer": "êtes en train de prendre",
+    "options": [
+     "êtes en train de prendre",
+     "est en train de prendre",
+     "sommes en train de prendre",
+     "sont en train de prendre"
+    ]
+   },
+   {
+    "id": 262,
+    "verb": "Détester",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Ils ___ les retards.",
+    "answer": "détestent",
+    "options": [
+     "détestez",
+     "détestons",
+     "détestent",
+     "détestes"
+    ]
+   },
+   {
+    "id": 263,
+    "verb": "Être",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Vous ___ fatigué aujourd'hui.",
+    "answer": "êtes",
+    "options": [
+     "es",
+     "sommes",
+     "êtes",
+     "est"
+    ]
+   },
+   {
+    "id": 264,
+    "verb": "Jouer",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Vous ___ au football le vendredi.",
+    "answer": "jouerez",
+    "options": [
+     "jouerai",
+     "jouerons",
+     "joueront",
+     "jouerez"
+    ]
+   },
+   {
+    "id": 265,
+    "verb": "Demander",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Je ___ une réduction de prix.",
+    "answer": "demande",
+    "options": [
+     "demandes",
+     "demandez",
+     "demandent",
+     "demande"
+    ]
+   },
+   {
+    "id": 266,
+    "verb": "Donner",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Nous ___ mon accord.",
+    "answer": "donnons",
+    "options": [
+     "donnez",
+     "donne",
+     "donne",
+     "donnons"
+    ]
+   },
+   {
+    "id": 267,
+    "verb": "Voir",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Je ___ le directeur demain.",
+    "answer": "ai vu",
+    "options": [
+     "avons vu",
+     "ai vu",
+     "ont vu",
+     "a vu"
+    ]
+   },
+   {
+    "id": 268,
+    "verb": "Dire",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Tu ___ toujours la vérité.",
+    "answer": "es en train de dire",
+    "options": [
+     "es en train de dire",
+     "suis en train de dire",
+     "sont en train de dire",
+     "est en train de dire"
+    ]
+   },
+   {
+    "id": 269,
+    "verb": "Entrer",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Tu ___ dans la réunion.",
+    "answer": "entres",
+    "options": [
+     "entrent",
+     "entrons",
+     "entres",
+     "entrez"
+    ]
+   },
+   {
+    "id": 270,
+    "verb": "Vouloir",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Vous ___ signer le contrat.",
+    "answer": "voudrez",
+    "options": [
+     "voudras",
+     "voudrons",
+     "voudrez",
+     "voudra"
+    ]
+   },
+   {
+    "id": 271,
+    "verb": "Jouer",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Vous ___ au football le vendredi.",
+    "answer": "avez joué",
+    "options": [
+     "avez joué",
+     "ont joué",
+     "ai joué",
+     "as joué"
+    ]
+   },
+   {
+    "id": 272,
+    "verb": "Habiter",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Vous ___ au Caire.",
+    "answer": "avez habité",
+    "options": [
+     "as habité",
+     "avez habité",
+     "a habité",
+     "ont habité"
+    ]
+   },
+   {
+    "id": 273,
+    "verb": "Donner",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Vous ___ mon accord.",
+    "answer": "êtes en train de donner",
+    "options": [
+     "es en train de donner",
+     "sont en train de donner",
+     "sommes en train de donner",
+     "êtes en train de donner"
+    ]
+   },
+   {
+    "id": 274,
+    "verb": "Dire",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Il ___ toujours la vérité.",
+    "answer": "dira",
+    "options": [
+     "dirons",
+     "diras",
+     "dira",
+     "dirai"
+    ]
+   },
+   {
+    "id": 275,
+    "verb": "Arriver",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Ils ___ au travail à 8h.",
+    "answer": "arrivent",
+    "options": [
+     "arrive",
+     "arrive",
+     "arrives",
+     "arrivent"
+    ]
+   },
+   {
+    "id": 276,
+    "verb": "Appeler",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Nous ___ le fournisseur.",
+    "answer": "appelons",
+    "options": [
+     "appellent",
+     "appelons",
+     "appelles",
+     "appelle"
+    ]
+   },
+   {
+    "id": 277,
+    "verb": "Répondre",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Je ___ au fournisseur.",
+    "answer": "réponds",
+    "options": [
+     "répondent",
+     "réponds",
+     "réponds",
+     "répondons"
+    ]
+   },
+   {
+    "id": 278,
+    "verb": "Danser",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Ils ___ à la fête.",
+    "answer": "ont dansé",
+    "options": [
+     "ont dansé",
+     "as dansé",
+     "avons dansé",
+     "ai dansé"
+    ]
+   },
+   {
+    "id": 279,
+    "verb": "Avoir",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Nous ___ deux filles.",
+    "answer": "avons",
+    "options": [
+     "avons",
+     "as",
+     "a",
+     "ont"
+    ]
+   },
+   {
+    "id": 280,
+    "verb": "Détester",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Je ___ les retards.",
+    "answer": "suis en train de détester",
+    "options": [
+     "sommes en train de détester",
+     "suis en train de détester",
+     "es en train de détester",
+     "êtes en train de détester"
+    ]
+   }
+  ],
+  [
+   {
+    "id": 281,
+    "verb": "S'appeler",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Il ___ (rare, on utilise plutôt le présent simple).",
+    "answer": "il/elle s'appelle",
+    "options": [
+     "je suis en train de m'appeler (نادر الاستخدام)",
+     "il/elle s'appelle",
+     "tu es en train de t'appeler (نادر)",
+     "ils/elles sont en train de s'appeler (نادر)"
+    ]
+   },
+   {
+    "id": 282,
+    "verb": "Mettre",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Je ___ le dossier sur le bureau.",
+    "answer": "ai mis",
+    "options": [
+     "as mis",
+     "ai mis",
+     "avons mis",
+     "avez mis"
+    ]
+   },
+   {
+    "id": 283,
+    "verb": "Parler",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Je ___ français au travail.",
+    "answer": "ai parlé",
+    "options": [
+     "ai parlé",
+     "avez parlé",
+     "ont parlé",
+     "avons parlé"
+    ]
+   },
+   {
+    "id": 284,
+    "verb": "Commencer",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Vous ___ la négociation.",
+    "answer": "avez commencé",
+    "options": [
+     "ai commencé",
+     "avez commencé",
+     "avons commencé",
+     "as commencé"
+    ]
+   },
+   {
+    "id": 285,
+    "verb": "Commencer",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Tu ___ la négociation.",
+    "answer": "as commencé",
+    "options": [
+     "ont commencé",
+     "as commencé",
+     "a commencé",
+     "avez commencé"
+    ]
+   },
+   {
+    "id": 286,
+    "verb": "Courir",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Nous ___ le matin.",
+    "answer": "courrons",
+    "options": [
+     "courrez",
+     "courras",
+     "courrons",
+     "courrai"
+    ]
+   },
+   {
+    "id": 287,
+    "verb": "Travailler",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Vous ___ dans les achats.",
+    "answer": "travaillerez",
+    "options": [
+     "travaillerez",
+     "travailleront",
+     "travaillerons",
+     "travaillera"
+    ]
+   },
+   {
+    "id": 288,
+    "verb": "Détester",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Je ___ les retards.",
+    "answer": "ai détesté",
+    "options": [
+     "as détesté",
+     "a détesté",
+     "ai détesté",
+     "ont détesté"
+    ]
+   },
+   {
+    "id": 289,
+    "verb": "Aller",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Vous ___ au bureau tous les jours.",
+    "answer": "êtes en train d'aller",
+    "options": [
+     "suis en train d'aller",
+     "es en train d'aller",
+     "êtes en train d'aller",
+     "est en train d'aller"
+    ]
+   },
+   {
+    "id": 290,
+    "verb": "Travailler",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Nous ___ dans les achats.",
+    "answer": "sommes en train de travailler",
+    "options": [
+     "est en train de travailler",
+     "êtes en train de travailler",
+     "suis en train de travailler",
+     "sommes en train de travailler"
+    ]
+   },
+   {
+    "id": 291,
+    "verb": "Acheter",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Ils ___ du matériel de sécurité.",
+    "answer": "ont acheté",
+    "options": [
+     "ont acheté",
+     "avons acheté",
+     "a acheté",
+     "ai acheté"
+    ]
+   },
+   {
+    "id": 292,
+    "verb": "Adorer",
+    "tense": "présent_continu",
+    "tense_ar": "المضارع المستمر",
+    "sentence": "Tu ___ mon travail.",
+    "answer": "es en train d'adorer",
+    "options": [
+     "suis en train d'adorer",
+     "es en train d'adorer",
+     "sommes en train d'adorer",
+     "est en train d'adorer"
+    ]
+   },
+   {
+    "id": 293,
+    "verb": "Boire",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Il ___ un café le matin.",
+    "answer": "a bu",
+    "options": [
+     "avez bu",
+     "ai bu",
+     "a bu",
+     "ont bu"
+    ]
+   },
+   {
+    "id": 294,
+    "verb": "Venir",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Je ___ de Suez.",
+    "answer": "viendrai",
+    "options": [
+     "viendrai",
+     "viendrez",
+     "viendront",
+     "viendra"
+    ]
+   },
+   {
+    "id": 295,
+    "verb": "Pouvoir",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Tu ___ vous rappeler demain.",
+    "answer": "as pu",
+    "options": [
+     "as pu",
+     "ont pu",
+     "avez pu",
+     "avons pu"
+    ]
+   },
+   {
+    "id": 296,
+    "verb": "S'appeler",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Le bébé ___ Lina.",
+    "answer": "il/elle s'appellera",
+    "options": [
+     "il/elle s'appellera",
+     "je m'appellerai",
+     "ils/elles s'appelleront",
+     "vous vous appellerez"
+    ]
+   },
+   {
+    "id": 297,
+    "verb": "Prendre",
+    "tense": "passé_composé",
+    "tense_ar": "الماضي",
+    "sentence": "Tu ___ le métro le matin.",
+    "answer": "as pris",
+    "options": [
+     "avons pris",
+     "as pris",
+     "ai pris",
+     "a pris"
+    ]
+   },
+   {
+    "id": 298,
+    "verb": "Habiter",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Il ___ au Caire.",
+    "answer": "habitera",
+    "options": [
+     "habitera",
+     "habiterons",
+     "habiterez",
+     "habiterai"
+    ]
+   },
+   {
+    "id": 299,
+    "verb": "Finir",
+    "tense": "futur_simple",
+    "tense_ar": "المستقبل",
+    "sentence": "Ils ___ le rapport aujourd'hui.",
+    "answer": "finiront",
+    "options": [
+     "finiront",
+     "finira",
+     "finirez",
+     "finirons"
+    ]
+   },
+   {
+    "id": 300,
+    "verb": "Jouer",
+    "tense": "présent",
+    "tense_ar": "الحاضر",
+    "sentence": "Tu ___ au football le vendredi.",
+    "answer": "joues",
+    "options": [
+     "joue",
+     "jouent",
+     "joues",
+     "jouons"
+    ]
+   }
+  ]
+ ]
+}</script>
+<script>
+// ============ DATA ============
+const VDATA = JSON.parse(document.getElementById('data-verbs').textContent);
+const EDATA = JSON.parse(document.getElementById('data-exams').textContent);
+const PRONOUNS = VDATA.pronouns; // ["je","tu","il/elle/on","nous","vous","ils/elles"]
+const VERBS = VDATA.verbs;
+const VERB_NAMES = Object.keys(VERBS);
+const TENSES = [
+  {key:"présent", ar:"الحاضر"},
+  {key:"présent_continu", ar:"المضارع المستمر"},
+  {key:"passé_composé", ar:"الماضي"},
+  {key:"futur_simple", ar:"المستقبل"},
+];
+
+// ============ TAB SWITCHING ============
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-'+btn.dataset.view).classList.add('active');
+  });
+});
+
+// ============ helpers ============
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function pick(arr,n){ return shuffle(arr).slice(0,n); }
+
+// ============================================================
+// DRILL MODE
+// ============================================================
+const verbChipsEl = document.getElementById('verb-chips');
+const tenseChipsEl = document.getElementById('tense-chips');
+const pronounChipsEl = document.getElementById('pronoun-chips');
+
+VERB_NAMES.forEach(name=>{
+  const chip = document.createElement('div');
+  chip.className = 'chip verb-chip';
+  chip.textContent = name;
+  chip.dataset.verb = name;
+  chip.addEventListener('click', ()=> chip.classList.toggle('selected'));
+  verbChipsEl.appendChild(chip);
+});
+
+TENSES.forEach(t=>{
+  const chip = document.createElement('div');
+  chip.className = 'chip tense-chip selected';
+  chip.textContent = t.ar;
+  chip.dataset.t = t.key;
+  chip.addEventListener('click', ()=> chip.classList.toggle('selected'));
+  tenseChipsEl.appendChild(chip);
+});
+
+PRONOUNS.forEach((p,idx)=>{
+  const chip = document.createElement('div');
+  chip.className = 'chip pronoun-chip selected';
+  chip.textContent = p;
+  chip.dataset.idx = idx;
+  chip.addEventListener('click', ()=> chip.classList.toggle('selected'));
+  pronounChipsEl.appendChild(chip);
+});
+
+let allVerbsOn = false;
+document.getElementById('btn-all-verbs').addEventListener('click', ()=>{
+  allVerbsOn = !allVerbsOn;
+  verbChipsEl.querySelectorAll('.verb-chip').forEach(c=>c.classList.toggle('selected', allVerbsOn));
+});
+
+let drillQueue = [];
+let drillIndex = 0;
+let drillScore = 0;
+
+function buildDrillQuestion(verbName, tenseKey, pronounIdx){
+  const forms = VERBS[verbName][tenseKey];
+  const correct = forms[pronounIdx];
+  // distractors: other pronoun forms of same verb/tense
+  const others = forms.filter((f,i)=> i!==pronounIdx);
+  let distractors = pick(others, Math.min(3, others.length));
+  while(distractors.length < 3){
+    // fallback: borrow from another random verb, same tense/pronoun
+    const randomVerb = VERB_NAMES[Math.floor(Math.random()*VERB_NAMES.length)];
+    const candidate = VERBS[randomVerb][tenseKey][pronounIdx];
+    if(candidate !== correct && !distractors.includes(candidate)) distractors.push(candidate);
+  }
+  const options = shuffle([correct, ...distractors]);
+  return {
+    verb: verbName, tense: tenseKey, pronounIdx,
+    prompt: `${verbName} — ${PRONOUNS[pronounIdx]}`,
+    correct, options
+  };
+}
+
+document.getElementById('start-drill').addEventListener('click', ()=>{
+  const selectedVerbs = [...verbChipsEl.querySelectorAll('.verb-chip.selected')].map(c=>c.dataset.verb);
+  const selectedTenses = [...tenseChipsEl.querySelectorAll('.tense-chip.selected')].map(c=>c.dataset.t);
+  const selectedPronouns = [...pronounChipsEl.querySelectorAll('.pronoun-chip.selected')].map(c=>+c.dataset.idx);
+
+  if(selectedVerbs.length===0 || selectedTenses.length===0 || selectedPronouns.length===0){
+    alert('اختار على الأقل فعل واحد وزمن واحد وضمير واحد.');
+    return;
+  }
+
+  let pool = [];
+  selectedVerbs.forEach(v=>{
+    selectedTenses.forEach(t=>{
+      selectedPronouns.forEach(p=>{
+        pool.push([v,t,p]);
+      });
+    });
+  });
+  pool = shuffle(pool).slice(0, Math.min(pool.length, 60)); // cap for reasonable session length
+
+  drillQueue = pool.map(([v,t,p])=> buildDrillQuestion(v,t,p));
+  drillIndex = 0; drillScore = 0;
+
+  document.getElementById('drill-setup').style.display='none';
+  document.getElementById('drill-result').style.display='none';
+  document.getElementById('drill-quiz').style.display='block';
+  renderDrillQuestion();
+});
+
+function renderDrillQuestion(){
+  const q = drillQueue[drillIndex];
+  document.getElementById('drill-progress').textContent = `سؤال ${drillIndex+1} من ${drillQueue.length}`;
+  document.getElementById('drill-score').textContent = `الدرجة: ${drillScore}`;
+  const tagEl = document.getElementById('drill-tense-tag');
+  const tenseInfo = TENSES.find(t=>t.key===q.tense);
+  tagEl.textContent = tenseInfo.ar;
+  tagEl.className = 'tense-tag ' + q.tense;
+
+  document.getElementById('drill-question').innerHTML =
+    `<span class="fr">${q.verb}</span> — <span style="direction:rtl">${PRONOUNS[q.pronounIdx]}</span> → <span class="blank">___</span>`;
+
+  const optWrap = document.getElementById('drill-options');
+  optWrap.innerHTML = '';
+  q.options.forEach(opt=>{
+    const b = document.createElement('button');
+    b.className = 'opt-btn';
+    b.textContent = opt;
+    b.addEventListener('click', ()=> handleDrillAnswer(b, opt, q.correct));
+    optWrap.appendChild(b);
+  });
+  document.getElementById('drill-next').style.display='none';
+}
+
+function handleDrillAnswer(btn, chosen, correct){
+  const buttons = document.querySelectorAll('#drill-options .opt-btn');
+  buttons.forEach(b=> b.disabled = true);
+  if(chosen === correct){
+    btn.classList.add('correct');
+    drillScore++;
+  } else {
+    btn.classList.add('wrong');
+    buttons.forEach(b=>{ if(b.textContent===correct) b.classList.add('correct'); });
+  }
+  document.getElementById('drill-score').textContent = `الدرجة: ${drillScore}`;
+  document.getElementById('drill-next').style.display='inline-block';
+}
+
+document.getElementById('drill-next').addEventListener('click', ()=>{
+  drillIndex++;
+  if(drillIndex >= drillQueue.length){
+    finishDrill();
+  } else {
+    renderDrillQuestion();
+  }
+});
+
+function finishDrill(){
+  document.getElementById('drill-quiz').style.display='none';
+  document.getElementById('drill-result').style.display='block';
+  const pct = Math.round((drillScore/drillQueue.length)*100);
+  const good = pct >= 70;
+  document.getElementById('drill-stamp').innerHTML =
+    `<div class="stamp ${good?'good':''}">${drillScore} / ${drillQueue.length} — ${pct}%</div>
+     <p class="muted">${good ? 'أداء ممتاز! كمّل على نفس المنوال 💪' : 'محتاج مراجعة أكتر لبعض الأفعال — جرب تاني 🔁'}</p>`;
+}
+
+document.getElementById('drill-restart').addEventListener('click', ()=>{
+  document.getElementById('drill-result').style.display='none';
+  document.getElementById('drill-setup').style.display='block';
+});
+
+// ============================================================
+// EXAM MODE
+// ============================================================
+const examGrid = document.getElementById('exam-grid');
+const examBestScores = {}; // in-memory only (no persistence across reload, per storage restrictions)
+
+EDATA.exams.forEach((exam, i)=>{
+  const tile = document.createElement('div');
+  tile.className = 'exam-tile';
+  tile.innerHTML = `<div class="num">${i+1}</div><div class="label">امتحان ${i+1}<br>٢٠ سؤال</div>`;
+  tile.addEventListener('click', ()=> startExam(i));
+  tile.id = 'exam-tile-'+i;
+  examGrid.appendChild(tile);
+});
+
+let currentExam = [];
+let currentExamIdx = -1;
+let examIndex = 0;
+let examScore = 0;
+let examAnswers = []; // {q, chosen, correct}
+
+function startExam(i){
+  currentExamIdx = i;
+  currentExam = EDATA.exams[i];
+  examIndex = 0; examScore = 0; examAnswers = [];
+  document.getElementById('exam-list').style.display='none';
+  document.getElementById('exam-result').style.display='none';
+  document.getElementById('exam-quiz').style.display='block';
+  renderExamQuestion();
+}
+
+function renderExamQuestion(){
+  const q = currentExam[examIndex];
+  document.getElementById('exam-progress').textContent = `سؤال ${examIndex+1} من ${currentExam.length}`;
+  document.getElementById('exam-score').textContent = `الدرجة: ${examScore}`;
+  const tagEl = document.getElementById('exam-tense-tag');
+  tagEl.textContent = q.tense_ar;
+  tagEl.className = 'tense-tag ' + q.tense;
+
+  document.getElementById('exam-question').innerHTML =
+    q.sentence.replace('___', '<span class="blank">___</span>');
+
+  const optWrap = document.getElementById('exam-options');
+  optWrap.innerHTML = '';
+  q.options.forEach(opt=>{
+    const b = document.createElement('button');
+    b.className = 'opt-btn';
+    b.textContent = opt;
+    b.addEventListener('click', ()=> handleExamAnswer(b, opt, q));
+    optWrap.appendChild(b);
+  });
+  document.getElementById('exam-next').style.display='none';
+}
+
+function handleExamAnswer(btn, chosen, q){
+  const buttons = document.querySelectorAll('#exam-options .opt-btn');
+  buttons.forEach(b=> b.disabled = true);
+  const isCorrect = chosen === q.answer;
+  if(isCorrect){
+    btn.classList.add('correct');
+    examScore++;
+  } else {
+    btn.classList.add('wrong');
+    buttons.forEach(b=>{ if(b.textContent===q.answer) b.classList.add('correct'); });
+  }
+  examAnswers.push({q, chosen, correct:isCorrect});
+  document.getElementById('exam-score').textContent = `الدرجة: ${examScore}`;
+  document.getElementById('exam-next').style.display='inline-block';
+}
+
+document.getElementById('exam-next').addEventListener('click', ()=>{
+  examIndex++;
+  if(examIndex >= currentExam.length){
+    finishExam();
+  } else {
+    renderExamQuestion();
+  }
+});
+
+function finishExam(){
+  document.getElementById('exam-quiz').style.display='none';
+  document.getElementById('exam-result').style.display='block';
+  const pct = Math.round((examScore/currentExam.length)*100);
+  const good = pct >= 70;
+  document.getElementById('exam-stamp').innerHTML =
+    `<div class="stamp ${good?'good':''}">${examScore} / ${currentExam.length} — ${pct}%</div>`;
+
+  examBestScores[currentExamIdx] = Math.max(examBestScores[currentExamIdx]||0, examScore);
+  const tile = document.getElementById('exam-tile-'+currentExamIdx);
+  tile.classList.add('done');
+  let bestEl = tile.querySelector('.best');
+  if(!bestEl){ bestEl = document.createElement('div'); bestEl.className='best'; tile.appendChild(bestEl); }
+  bestEl.textContent = `أفضل: ${examBestScores[currentExamIdx]}/20`;
+
+  const reviewWrap = document.getElementById('exam-review');
+  reviewWrap.innerHTML = '';
+  examAnswers.filter(a=>!a.correct).forEach(a=>{
+    const div = document.createElement('div');
+    div.className = 'review-item wrong';
+    div.innerHTML = `<div class="sent">${a.q.sentence.replace('___', '<u>'+a.q.answer+'</u>')}</div>
+      <div class="muted">إجابتك: <span class="fr" style="color:var(--wrong)">${a.chosen}</span> — الصح: <span class="fr" style="color:var(--correct)">${a.q.answer}</span> (${a.q.tense_ar})</div>`;
+    reviewWrap.appendChild(div);
+  });
+  if(examAnswers.every(a=>a.correct)){
+    reviewWrap.innerHTML = '<p class="muted">🎉 إجابة كل الأسئلة صح! مفيش حاجة للمراجعة.</p>';
+  }
+}
+
+document.getElementById('exam-back').addEventListener('click', ()=>{
+  document.getElementById('exam-result').style.display='none';
+  document.getElementById('exam-list').style.display='block';
+});
+
+// ============================================================
+// REFERENCE MODE
+// ============================================================
+const refChipsEl = document.getElementById('ref-chips');
+const refDetailEl = document.getElementById('ref-detail');
+
+VERB_NAMES.forEach(name=>{
+  const chip = document.createElement('div');
+  chip.className = 'chip verb-chip ref-chip';
+  chip.textContent = name;
+  chip.addEventListener('click', ()=>{
+    document.querySelectorAll('#ref-chips .chip').forEach(c=>c.classList.remove('selected'));
+    chip.classList.add('selected');
+    renderRefDetail(name);
+  });
+  refChipsEl.appendChild(chip);
+});
+
+function renderRefDetail(name){
+  const data = VERBS[name];
+  let rows = '';
+  TENSES.forEach(t=>{
+    const forms = data[t.key];
+    rows += `<tr><td style="text-align:right;font-weight:bold;color:var(--ink-soft)">${t.ar}</td>${forms.map(f=>`<td>${f}</td>`).join('')}</tr>`;
+  });
+  refDetailEl.innerHTML = `
+    <h3 class="fr" style="color:var(--blue)">${name} <span style="font-family:'Segoe UI','Cairo',sans-serif;color:var(--ink-soft);font-size:14px">(${data.meaning_ar})</span></h3>
+    <table class="mini">
+      <thead><tr><th>الزمن</th>${PRONOUNS.map(p=>`<th>${p}</th>`).join('')}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p class="muted" style="margin-top:10px;"><span class="fr">✏️ ${data.exemple_fr}</span><br>${data.exemple_ar}</p>
+    ${data.note ? `<p class="muted">💡 ${data.note}</p>` : ''}
+  `;
+}
+// show first verb by default
+if(VERB_NAMES.length){
+  refChipsEl.firstChild.classList.add('selected');
+  renderRefDetail(VERB_NAMES[0]);
+}
+
+</script>
+</body>
+</html>
